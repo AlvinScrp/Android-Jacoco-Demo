@@ -1,6 +1,6 @@
 apply plugin: 'jacoco'
 jacoco {
-    toolVersion = "0.8.8"
+    toolVersion = "0.8.7"
 }
 //这个就是具体解析ec文件的任务，会根据我们指定的class路径、源码路径、ec路径进行解析输出
 def fileFilter = [
