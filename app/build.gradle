@@ -3,6 +3,7 @@ plugins {
     id 'org.jetbrains.kotlin.android'
     id 'kotlin-kapt'
 }
+apply from: rootProject.file('jacoco.gradle')
 
 android {
     namespace 'com.a.jacocotest'
@@ -19,10 +20,15 @@ android {
     }
 
     buildTypes {
+        debug{
+            minifyEnabled false
+            testCoverageEnabled = true
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8

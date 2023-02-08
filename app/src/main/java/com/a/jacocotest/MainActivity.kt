@@ -16,14 +16,21 @@ class MainActivity : AppCompatActivity() {
 
         binding.btn1.setOnClickListener { updateText(true) }
         binding.btn2.setOnClickListener { updateText(false) }
+        binding.btnGenJacoco.setOnClickListener { JacocoHelper.generateCoverageFile(this@MainActivity) }
     }
 
     private fun updateText(ok: Boolean) {
         val text = if (ok) {
-            "OK!"
+            getOKText()
         } else {
-            "Bad!"
+            getBadCode()
         }
         binding.tv.text = text
+    }
+
+    private fun getOKText(): String = "OK!!!!"
+
+    private fun getBadCode(): String {
+        return "Bad!"
     }
 }
