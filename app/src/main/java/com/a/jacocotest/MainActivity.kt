@@ -1,8 +1,11 @@
 package com.a.jacocotest
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import com.a.jacocotest.databinding.ActivityMainBinding
+import com.a.lib.ComposeActivity
+import kotlin.concurrent.thread
 
 class MainActivity : AppCompatActivity() {
 
@@ -14,12 +17,22 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
-        binding.btn1.setOnClickListener { updateText(true) }
-        binding.btn2.setOnClickListener { updateText(false) }
+        binding.btn1.setOnClickListener { updateText2(true) }
+        binding.btn2.setOnClickListener { updateText2(false) }
+        binding.btnStartComposeActivity.setOnClickListener {
+            startActivity(Intent(this@MainActivity,ComposeActivity::class.java))
+        }
+        binding.btnApkMd5.setOnClickListener {
+            ApkUtil.getApkMD5(this@MainActivity)
+        }
         binding.btnGenJacoco.setOnClickListener { JacocoHelper.generateCoverageFile(this@MainActivity) }
+
+
     }
 
-    private fun updateText(ok: Boolean) {
+
+
+    private fun updateText2(ok: Boolean) {
         val text = if (ok) {
             getOKText()
         } else {

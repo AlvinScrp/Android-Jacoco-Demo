@@ -1,4 +1,8 @@
 buildscript {
+    //https://developer.android.com/jetpack/androidx/releases/compose-kotlin?hl=zh-cn
+    ext {
+        compose_ui_version = '1.3.1'
+    }
     repositories {
         google()
         mavenCentral()
@@ -6,6 +10,49 @@ buildscript {
 
     dependencies {
         classpath 'com.android.tools.build:gradle:7.3.1'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.20"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.20"
+    }
+}
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty('android')) {
+            android {
+
+                buildTypes {
+                    debug{
+                        minifyEnabled false
+                        testCoverageEnabled  true
+                    }
+                    release {
+                        minifyEnabled false
+                        proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+                    }
+
+                }
+                compileOptions {
+                    sourceCompatibility JavaVersion.VERSION_1_8
+                    targetCompatibility JavaVersion.VERSION_1_8
+                }
+                kotlinOptions {
+                    jvmTarget = '1.8'
+                }
+                buildFeatures {
+                    dataBinding true
+                }
+
+                flavorDimensions "environment"
+
+                productFlavors {
+                    // 日常测试
+                    daily {
+
+                    }
+                    // 灰度
+                    gray {}
+                    // 线上
+                    online {}
+                }
+            }
+        }
     }
 }

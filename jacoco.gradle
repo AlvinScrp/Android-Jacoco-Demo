@@ -27,14 +27,16 @@ def fileFilter = [
         '**/*_Provide*Factory*.*',
         '**/*Extensions*.*'
 ]
-def coverageSourceDirs = [
-        "${rootDir}/app/src/main/java"
-]
-def javaClassDirPath = ["$buildDir/intermediates/javac/debug"]
-def kotlinClassDirPath = ["$buildDir/tmp/kotlin-classes/debug"]
-def coverageClassDirPaths = javaClassDirPath + kotlinClassDirPath
-def coverageClassFileTrees =
-        coverageClassDirPaths.collect {
+def moduleProjects = project.rootProject.subprojects
+println("================")
+moduleProjects.forEach { print("${it.name} , ") }
+println("================")
+def sourceDirs = moduleProjects.collect { "${it.projectDir}/src/main/java" }
+def javaClassDir = moduleProjects.collect { "${it.projectDir}/build/intermediates/javac/dailyDebug" }
+def kotlinClassDir = moduleProjects.collect { "${it.projectDir}/build/tmp/kotlin-classes/dailyDebug" }
+def classDirPaths = javaClassDir + kotlinClassDir
+def classFileTrees =
+        classDirPaths.collect {
             fileTree(dir: it, excludes: fileFilter)
         }
 
@@ -46,12 +48,12 @@ task jacocoTestReport(type: JacocoReport) {
         html.enabled = true
     }
 
-    sourceDirectories.setFrom(files(coverageSourceDirs))
-    classDirectories.setFrom(coverageClassFileTrees)
+    sourceDirectories.setFrom(files(sourceDirs))
+    classDirectories.setFrom(classFileTrees)
     executionData.setFrom(files("$rootDir/build/aa.ec"))
     doFirst {
         //遍历class路径下的所有文件，替换字符
-        coverageClassDirPaths.each { path ->
+        classDirPaths.each { path ->
             new File(path).eachFileRecurse { file ->
                 if (file.name.contains('$$')) {
                     file.renameTo(file.path.replace('$$', '$'))

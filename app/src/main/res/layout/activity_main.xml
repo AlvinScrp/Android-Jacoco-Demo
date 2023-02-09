@@ -39,6 +39,23 @@
                 android:layout_marginStart="30dp"
                 android:text="Bad" />
         </androidx.appcompat.widget.LinearLayoutCompat>
+
+        <Button
+            android:layout_margin="10dp"
+            android:textAllCaps="false"
+            android:id="@+id/btnStartComposeActivity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="30dp"
+            android:text="start Compose Activity" />
+        <Button
+            android:layout_margin="10dp"
+            android:textAllCaps="false"
+            android:id="@+id/btnApkMd5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="30dp"
+            android:text="获取当前应用apk的MD5" />
         <View
             android:layout_width="10dp"
             android:layout_height="50dp"/>
