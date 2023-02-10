@@ -6,11 +6,30 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+        maven {
+        url "https://repo.eclipse.org/content/groups/releases/"
+        }
+        maven {
+            url "https://nexus.webuy.ai/nexus/content/repositories/central/"
+        }
+
+        mavenCentral()
     }
 
     dependencies {
         classpath 'com.android.tools.build:gradle:7.3.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.20"
+    }
+}
+allprojects {
+    repositories {
+//        maven {
+//        url "https://repo.eclipse.org/content/groups/releases/"
+//        }
+//        maven {
+//            url "https://nexus.webuy.ai/nexus/content/repositories/central/"
+//        }
+//        mavenCentral()
     }
 }
 subprojects {
