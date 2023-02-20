@@ -1,7 +1,7 @@
 #!/bin/bash
 echo "======step1:从SD卡拷贝原始文件"
 projectDir=$(cd `dirname $0`; pwd)
-toDir="${projectDir}/build"
+toDir="${projectDir}/build/ec"
 if [ ! -d "$toDir" ];then
 mkdir "$toDir"
 echo "创建文件夹成功"

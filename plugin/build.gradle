@@ -7,7 +7,7 @@ buildscript {
 }
 
 plugins {
-//    `kotlin-dsl`
+//    id "kotlin-dsl"
     id "org.jetbrains.kotlin.jvm"
     id "java-gradle-plugin"
     id 'maven-publish'
@@ -24,8 +24,8 @@ java {
 //}
 
 dependencies {
-    implementation(gradleApi())
-    implementation("com.android.tools.build:gradle:7.3.1")
+    compileOnly(gradleApi())
+    compileOnly("com.android.tools.build:gradle:7.3.0")
 //    implementation project(path: ':JGit')
     implementation("com.google.guava:guava:30.1-jre")
     implementation("commons-io:commons-io:2.6")
@@ -36,25 +36,23 @@ dependencies {
 
 }
 
-group 'com.webuy.asm'
-version '0.0.4'
+group 'com.a.coco'
+version '0.0.1-alpha01'
 
 gradlePlugin {
     plugins {
-        create("log") {
-            id = 'com.webuy.plugin.privacy.log'
-            implementationClass = 'com.a.plugin.privacylog.PrivacyLogPlugin'
+        create("coco") {
+            id = 'com.a.plugin.coco'
+            implementationClass = 'com.a.plugin.cc.CoveragePlugin'
         }
-//        create("methodRecord") {
-//            id = 'com.webuy.plugin.method.record'
-//            implementationClass = 'com.a.plugin.methodrecord.MethodRecordPlugin'
-//        }
     }
 }
+//for Task  ./gradlew :plugin:publishPluginMavenPublicationToMavenRepository
 publishing {
     repositories {
         maven {
-            url '../repo'
+//            url '../repo'
+            url '/Users/canglong/Documents/android_project/fxj/repo'
         }
     }
 }

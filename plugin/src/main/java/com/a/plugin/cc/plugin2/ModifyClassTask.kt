@@ -1,5 +1,6 @@
-package com.a.plugin.cc
+package com.a.plugin.cc.plugin2
 
+import com.a.plugin.cc.CoverageConfig
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
@@ -10,9 +11,8 @@ import org.gradle.api.tasks.TaskAction
 import org.jacoco.core.instr.Instrumenter
 import org.jacoco.core.runtime.OfflineInstrumentationAccessGenerator
 import java.io.File
-import java.io.IOException
-import java.io.UncheckedIOException
 import com.google.common.io.Files
+import org.objectweb.asm.ClassReader
 
 abstract class ModifyClassesTask : DefaultTask() {
 
@@ -33,7 +33,7 @@ abstract class ModifyClassesTask : DefaultTask() {
         classIntDirectories.get().forEach { inDir ->
             println("inDir : ${inDir.asFile.absolutePath}")
             inDir.asFile.walk()
-                .filter { it.isFile && Utils.endWidth(it.name, ".class") }
+                .filter { it.isFile && it.name.endsWith(".class") }
                 .forEach { classFile ->
                     println("classFile:${classFile.absolutePath}")
                     val outputFile = File(
@@ -42,24 +42,32 @@ abstract class ModifyClassesTask : DefaultTask() {
                             outputDir.absolutePath
                         )
                     )
-                    val isInject =
-                        Utils.startWith(outputFile.absolutePath, outputDir.absolutePath + "/com/a")
+//                    val isInject =
+//                        Utils.startWith(outputFile.absolutePath, outputDir.absolutePath + "/com/a")
+//
+////
+
                     try {
-                        if (isInject) {
-                            classFile.inputStream().buffered().use { inputStream ->
-                                val instrumented =
-                                    instrumenter.instrument(inputStream, "toInstrument.toString()")
-                                Files.createParentDirs(outputFile)
-                                Files.write(instrumented, outputFile)
-                            }
-                        } else {
+//                        if (isInject) {
+                        classFile.inputStream().readAllBytes().let { bytes ->
+                            val classReader = ClassReader(bytes)
+                            val className = classReader.className.replace('/', '.') + ".class"
+                            val isInject = CoverageConfig.matches(className)
+
                             Files.createParentDirs(outputFile)
-                            Files.copy(classFile, outputFile)
+                            if (isInject) {
+                                val instrumented =
+                                    instrumenter.instrument(bytes, "$className instrument")
+                                Files.write(instrumented, outputFile)
+                            } else {
+                                Files.write(bytes, outputFile)
+                            }
                         }
 
-                    } catch (e: IOException) {
-                        throw UncheckedIOException(
-                            "isInject:" + isInject + ",Unable to instrument file with Jacoco: " + classFile.absolutePath,
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        throw Exception(
+                            " Unable to instrument file with Jacoco: " + classFile.absolutePath,
                             e
                         )
                     }

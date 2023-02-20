@@ -15,19 +15,21 @@ import java.io.IOException
 import java.util.*
 
 fun main(args: Array<String>) {
-    val git = Git.open(File("/Users/canglong/Documents/github_project/Android-Jacoco-Demo-builds"))
-    getDiffFileOfTwoBranch(git, "build-2", "build-1")
+    val dir = "/Users/canglong/Documents/github_project/Android-Jacoco-Demo-builds"
 
-    val classInfoList = SourceCodeDiff.diffMethodsTwoBranch(git, "build-2", "build-1")
+    getDiffFileOfTwoBranch(dir, "build-2", "build-1")
+
+    val classInfoList = SourceCodeDiff.diffMethodsTwoBranch(dir, "build-2", "build-1")
     println("-----------")
     classInfoList.forEach { it.methodInfos.forEach { println(it) } }
     println("-----------")
-    val methods = ClassesDiff.diffMethodsTwoBranch(git, "build-2", "build-1")
+    val methods = ClassesDiff.diffMethodsTwoBranch(dir, "build-2", "build-1")
     methods.forEach { println(it) }
 
 }
 
-fun getDiffFileOfTwoBranch(git: Git, newBranch: String, oldBranch: String) {
+fun getDiffFileOfTwoBranch(gitDir: String, newBranch: String, oldBranch: String) {
+    val git = Git.open(File(gitDir))
     val oldTreeParser = prepareTreeParser(git.repository, "refs/heads/${oldBranch}")
     val newTreeParser = prepareTreeParser(git.repository, "refs/heads/${newBranch}")
 

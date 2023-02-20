@@ -1,4 +1,4 @@
-package com.a.plugin.cc;
+package com.a.plugin.cc.plugin1;
 
 
 import java.lang.reflect.Constructor;

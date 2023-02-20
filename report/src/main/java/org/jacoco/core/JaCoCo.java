@@ -20,20 +20,20 @@ import java.util.ResourceBundle;
 public final class JaCoCo {
 
 	/** Qualified build version of the JaCoCo core library. */
-	public static final String VERSION;
+	public static final String VERSION ="0.8.7";
 
 	/** Absolute URL of the current JaCoCo home page */
-	public static final String HOMEURL;
+	public static final String HOMEURL ="http://www.jacoco.org/jacoco";
 
 	/** Name of the runtime package of this build */
-	public static final String RUNTIMEPACKAGE;
+	public static final String RUNTIMEPACKAGE="org.jacoco.agent.rt.internal";
 
 	static {
-		final ResourceBundle bundle = ResourceBundle
-				.getBundle("org.jacoco.core.jacoco");
-		VERSION = "0.8.7";
-		HOMEURL = "http://www.jacoco.org/jacoco";
-		RUNTIMEPACKAGE = "org.jacoco.agent.rt.internal";
+//		final ResourceBundle bundle = ResourceBundle
+//				.getBundle("org.jacoco.core.jacoco");
+//		VERSION = "0.8.7";
+//		HOMEURL = "http://www.jacoco.org/jacoco";
+//		RUNTIMEPACKAGE = "org.jacoco.agent.rt.internal";
 	}
 
 	private JaCoCo() {

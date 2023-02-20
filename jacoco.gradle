@@ -37,7 +37,7 @@ def kotlinClassDir = moduleProjects.collect { "${it.projectDir}/build/tmp/kotlin
 def classDirPaths = javaClassDir + kotlinClassDir
 def classFileTrees =
         classDirPaths.collect {
-            fileTree(dir: it, excludes: fileFilter)
+            fileTree(dir: it, excludes: fileFilter , includes: ['**/com/a/**'])
         }
 
 task jacocoTestReport(type: JacocoReport) {
@@ -50,13 +50,16 @@ task jacocoTestReport(type: JacocoReport) {
 
     sourceDirectories.setFrom(files(sourceDirs))
     classDirectories.setFrom(classFileTrees)
-    executionData.setFrom(files("$rootDir/build/aa.ec"))
+    executionData.setFrom(files("$rootDir/build/ec/aa.ec"))
     doFirst {
         //遍历class路径下的所有文件，替换字符
         classDirPaths.each { path ->
-            new File(path).eachFileRecurse { file ->
-                if (file.name.contains('$$')) {
-                    file.renameTo(file.path.replace('$$', '$'))
+            def dir=  new File(path)
+            if(dir.exists()){
+                dir.eachFileRecurse { file ->
+                    if (file.name.contains('$$')) {
+                        file.renameTo(file.path.replace('$$', '$'))
+                    }
                 }
             }
         }

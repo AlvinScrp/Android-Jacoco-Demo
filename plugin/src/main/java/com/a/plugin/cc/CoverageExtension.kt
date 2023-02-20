@@ -1,11 +1,13 @@
 package com.a.plugin.cc
 
 open class CoverageExtension {
-    var logMethod:String?=""
-    var ignorePackages:Array<String>? = arrayOf()
-    var cacheOutputs = true
 
+    var enable: Boolean? = null
 
+    var includes: Array<String>? = arrayOf()
+    var excludes: Array<String>? = arrayOf()
+
+    var instrumentType: Int? = null
 
 
 }

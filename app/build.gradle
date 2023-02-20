@@ -1,9 +1,18 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
-    id 'kotlin-kapt'
 }
 apply from: rootProject.file('jacoco.gradle')
+
+
+import com.a.plugin.cc.CoveragePlugin
+
+apply plugin: CoveragePlugin
+coverage {
+    enable = true
+    includes = ["com.a.*"]
+    instrumentType = 1
+}
 
 android {
     namespace 'com.a.jacocotest'
@@ -28,8 +37,15 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.4.1'
     implementation 'com.google.android.material:material:1.5.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
-    implementation project(":lib")
+//    implementation project(":lib")
+    implementation project(":other")
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+
+//    onlineApi project(path: ':rt-no-op')
+//    ['daily', 'gray'].each {
+//        "${it}Api" project(path: ':rt')
+//    }
+    api project(path: ':rt')
 }

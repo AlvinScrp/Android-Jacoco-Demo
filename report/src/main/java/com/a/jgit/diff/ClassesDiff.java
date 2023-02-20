@@ -27,6 +27,7 @@ import org.eclipse.jgit.treewalk.TreeWalk;
 import org.objectweb.asm.ClassReader;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -39,8 +40,9 @@ public class ClassesDiff {
     private final static String REF_HEADS = "refs/heads/";
 
 
-    public static Set<ClassFileMethodInfo> diffMethodsTwoBranch(Git git, String newBranch, String oldBranch) {
+    public static Set<ClassFileMethodInfo> diffMethodsTwoBranch(String gitDir, String newBranch, String oldBranch) {
         try {
+            Git git = Git.open(new File(gitDir));
             Repository repo = git.getRepository();
             AbstractTreeIterator oldTreeParser = prepareTreeParser(repo, REF_HEADS + oldBranch);
             AbstractTreeIterator newTreeParser = prepareTreeParser(repo, REF_HEADS + newBranch);

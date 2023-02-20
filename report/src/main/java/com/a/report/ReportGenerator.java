@@ -12,6 +12,9 @@
  *******************************************************************************/
 package com.a.report;
 
+import com.a.jgit.diff.ClassesDiff;
+import com.a.jgit.diff.classfiles.ClassFileMethodInfo;
+
 import org.jacoco.core.analysis.Analyzer;
 import org.jacoco.core.analysis.CoverageBuilder;
 import org.jacoco.core.analysis.IBundleCoverage;
@@ -26,6 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * This example creates a HTML report for eclipse like projects based on a
@@ -66,22 +70,22 @@ public class ReportGenerator {
 
         // Read the jacoco.exec file. Multiple data files could be merged
         // at this point
-       try{
-           loadExecutionData();
-           // Run the structure analyzer on a single class folder to build up
-           // the coverage model. The process would be similar if your classes
-           // were in a jar file. Typically you would create a bundle for each
-           // class folder and each jar you want in your report. If you have
-           // more than one bundle you will need to add a grouping node to your
-           // report
-           final IBundleCoverage bundleCoverage = analyzeStructure();
+        try {
+            loadExecutionData();
+            // Run the structure analyzer on a single class folder to build up
+            // the coverage model. The process would be similar if your classes
+            // were in a jar file. Typically you would create a bundle for each
+            // class folder and each jar you want in your report. If you have
+            // more than one bundle you will need to add a grouping node to your
+            // report
+            final IBundleCoverage bundleCoverage = analyzeStructure();
 
-           createReport(bundleCoverage);
+            createReport(bundleCoverage);
 
-       }catch (Exception e){//不中断流程
-           e.printStackTrace();
-           System.err.println(e.getMessage());
-       }
+        } catch (Exception e) {//不中断流程
+            e.printStackTrace();
+            System.err.println(e.getMessage());
+        }
 
     }
 
@@ -117,7 +121,7 @@ public class ReportGenerator {
 
     private void loadExecutionData() {
         execFileLoader = new ExecFileLoader();
-        load(execFileLoader,executionDataDir);
+        load(execFileLoader, executionDataDir);
 
     }
 
@@ -128,7 +132,7 @@ public class ReportGenerator {
      * @param loader
      * @throws RuntimeException
      */
-    public void load(final ExecFileLoader loader,String dir) throws RuntimeException {
+    public void load(final ExecFileLoader loader, String dir) throws RuntimeException {
         for (final File fileSet : fileSets(dir)) {
             final File inputFile = new File(dir, fileSet.getName());
             if (inputFile.isDirectory()) {
@@ -150,7 +154,7 @@ public class ReportGenerator {
         File path = new File(dir);
         if (!path.exists()) {
             throw new NullPointerException("No path name is :" + dir);
-        }else if(path.isFile() && (path.getName().endsWith(".exec") || path.getName().endsWith(".ec"))){
+        } else if (path.isFile() && (path.getName().endsWith(".exec") || path.getName().endsWith(".ec"))) {
             fileSetList.add(path);
             return fileSetList;
         }
@@ -183,7 +187,6 @@ public class ReportGenerator {
     }
 
 
-
     /**
      * Starts the report generation process
      *
@@ -192,16 +195,22 @@ public class ReportGenerator {
      * @throws IOException
      */
     public static void main(final String[] args) throws IOException {
-        File exec = new File("/Users/wzh/ttpc/gitlab/Dealer-Android-Rebuild/app/build/outputs/coverage");
+
+        String projectDir = "/Users/canglong/Documents/github_project/Android-Jacoco-Demo";
+        String buildProjectDir = "/Users/canglong/Documents/github_project/Android-Jacoco-Demo-builds";
+
+        Set<ClassFileMethodInfo> methods = ClassesDiff.diffMethodsTwoBranch(buildProjectDir, "build-2", "build-1");
+
+        File execDir = new File(projectDir + "/build/ec");
+        File reportDir = new File(projectDir + "/build/report");
 
         List<File> sourceDirs = new ArrayList<>();
-        sourceDirs.add(new File("/Users/wzh/ttpc/gitlab/Dealer-Android-Rebuild/app/src/main/java"));
+        sourceDirs.add(new File(buildProjectDir + "/app/src/main/java"));
 
         List<File> classDirs = new ArrayList<>();
-        classDirs.add(new File("/Users/wzh/ttpc/gitlab/Dealer-Android-Rebuild/app/classes"));
+        classDirs.add(new File(buildProjectDir + "/app/build/tmp/kotlin-classes/dailyDebug"));
 
-        File reportDir = new File("/Users/wzh/ttpc/gitlab/Dealer-Android-Rebuild/app/build/report");
-        ReportGenerator generator = new ReportGenerator(exec.getAbsolutePath(), classDirs, sourceDirs, reportDir);
+        ReportGenerator generator = new ReportGenerator(execDir.getAbsolutePath(), classDirs, sourceDirs, reportDir);
         generator.create();
     }
 

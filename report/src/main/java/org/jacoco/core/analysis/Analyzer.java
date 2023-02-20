@@ -93,6 +93,7 @@ public class Analyzer {
 				classid, noMatch);
 		final ClassAnalyzer analyzer = new ClassAnalyzer(coverage, probes,
 				stringPool) {
+
 			@Override
 			public void visitEnd() {
 				super.visitEnd();

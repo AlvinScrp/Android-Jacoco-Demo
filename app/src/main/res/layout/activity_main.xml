@@ -39,15 +39,30 @@
                 android:layout_marginStart="30dp"
                 android:text="Bad" />
         </androidx.appcompat.widget.LinearLayoutCompat>
-
-        <Button
-            android:layout_margin="10dp"
-            android:textAllCaps="false"
-            android:id="@+id/btnStartComposeActivity"
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:orientation="horizontal"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="30dp"
-            android:text="start Compose Activity" />
+            android:layout_height="wrap_content">
+            <Button
+                android:layout_margin="10dp"
+                android:textAllCaps="false"
+                android:id="@+id/btnStartComposeActivity"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="30dp"
+                android:text="Compose Activity" />
+            <Button
+                android:layout_margin="10dp"
+                android:textAllCaps="false"
+                android:id="@+id/btnStartOtherActivity"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="30dp"
+                android:text="Other Activity" />
+
+        </androidx.appcompat.widget.LinearLayoutCompat>
+
+
         <Button
             android:layout_margin="10dp"
             android:textAllCaps="false"
