@@ -12,6 +12,8 @@
  *******************************************************************************/
 package org.jacoco.core.internal.flow;
 
+import com.a.report.ReportConfigManager;
+
 import org.jacoco.core.internal.instr.InstrSupport;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
@@ -65,20 +67,14 @@ public class ClassProbesAdapter extends ClassVisitor
         final MethodProbesVisitor mv = cv.visitMethod(access, name, desc,
                 signature, exceptions);
 
-        Boolean needFlag1 = this.name.equals("com/a/jacocotest/MainActivity") &&
-                (name.equals("updateText") || name.equals("onCreate$lambda$0") || name.equals("onCreate$lambda$1"));
+//        Boolean needFlag1 = this.name.equals("com/a/jacocotest/MainActivity") &&
+//                (name.equals("updateText") || name.equals("onCreate$lambda$0") || name.equals("onCreate$lambda$1"));
+//        Boolean needFlag2 = this.name.equals("com/a/jacocotest/JacocoHelper") &&
+//                name.equals("generateCoverageFile");
+//        Boolean needFlag = needFlag1 || needFlag2;
+        Boolean isMatched = ReportConfigManager.getInstance().isMatched(this.name, name, desc);
+        methodProbes = mv != null && isMatched ? mv : EMPTY_METHOD_PROBES_VISITOR;
 
-        Boolean needFlag2 = this.name.equals("com/a/jacocotest/JacocoHelper") &&
-                name.equals("generateCoverageFile");
-
-        Boolean needFlag = needFlag1 || needFlag2;
-        if (mv == null || !needFlag) {
-            // We need to visit the method in any case, otherwise probe ids
-            // are not reproducible
-            methodProbes = EMPTY_METHOD_PROBES_VISITOR;
-        } else {
-            methodProbes = mv;
-        }
         return new MethodSanitizer(null, access, name, desc, signature,
                 exceptions) {
 

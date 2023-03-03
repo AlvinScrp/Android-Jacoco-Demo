@@ -13,7 +13,7 @@
 package com.a.report;
 
 import com.a.jgit.diff.ClassesDiff;
-import com.a.jgit.diff.classfiles.ClassFileMethodInfo;
+import com.a.jgit.diff.classfiles.ClassMethodInfo;
 
 import org.jacoco.core.analysis.Analyzer;
 import org.jacoco.core.analysis.CoverageBuilder;
@@ -199,16 +199,23 @@ public class ReportGenerator {
         String projectDir = "/Users/canglong/Documents/github_project/Android-Jacoco-Demo";
         String buildProjectDir = "/Users/canglong/Documents/github_project/Android-Jacoco-Demo-builds";
 
-        Set<ClassFileMethodInfo> methods = ClassesDiff.diffMethodsTwoBranch(buildProjectDir, "build-2", "build-1");
-
+        Set<ClassMethodInfo> methods = ClassesDiff.diffMethodsTwoBranch(buildProjectDir, "b5", "b4");
+        ReportConfigManager.getInstance().setDiff(methods);
+        ReportConfigManager.getInstance().setIncremental(false);
+        System.out.println("------->diff method start");
+        for (ClassMethodInfo method : methods) {
+            System.out.println(method.className + ":" + method.methodName);
+        }
+        System.out.println("------->diff method end");
         File execDir = new File(projectDir + "/build/ec");
         File reportDir = new File(projectDir + "/build/report");
 
         List<File> sourceDirs = new ArrayList<>();
-        sourceDirs.add(new File(buildProjectDir + "/app/src/main/java"));
+        sourceDirs.add(new File(buildProjectDir + "/src/main/java"));
 
         List<File> classDirs = new ArrayList<>();
-        classDirs.add(new File(buildProjectDir + "/app/build/tmp/kotlin-classes/dailyDebug"));
+//        classDirs.add(new File(buildProjectDir + "/app/build/tmp/kotlin-classes"));
+        classDirs.add(new File(buildProjectDir + "/build"));
 
         ReportGenerator generator = new ReportGenerator(execDir.getAbsolutePath(), classDirs, sourceDirs, reportDir);
         generator.create();

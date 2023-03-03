@@ -3,13 +3,13 @@ package com.a.jgit.diff.classfiles;
 import java.util.Arrays;
 import java.util.Objects;
 
-public class ClassFileMethodInfo {
+public class ClassMethodInfo {
     public String className;
     public String methodName;
     public String desc;
     public String signature;
     public String[] exceptions;
-    public String md5;//有方法本体，注解构成的md5
+    public String md5;
 
     @Override
     public int hashCode() {
@@ -22,7 +22,7 @@ public class ClassFileMethodInfo {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ClassFileMethodInfo that = (ClassFileMethodInfo) o;
+        ClassMethodInfo that = (ClassMethodInfo) o;
         return Objects.equals(className, that.className) && Objects.equals(methodName, that.methodName) && Objects.equals(desc, that.desc) && Objects.equals(signature, that.signature) && Arrays.equals(exceptions, that.exceptions) && Objects.equals(md5, that.md5);
     }
 

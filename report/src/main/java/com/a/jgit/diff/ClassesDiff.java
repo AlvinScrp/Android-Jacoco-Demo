@@ -1,6 +1,6 @@
 package com.a.jgit.diff;
 
-import com.a.jgit.diff.classfiles.ClassFileMethodInfo;
+import com.a.jgit.diff.classfiles.ClassMethodInfo;
 import com.a.jgit.diff.classfiles.DiffClassVisitor;
 import com.a.jgit.diff.sourcecode.ASTGenerator;
 import com.a.jgit.diff.sourcecode.IASTGenerator;
@@ -35,12 +35,11 @@ import java.util.List;
 import java.util.Set;
 
 
-public class ClassesDiff {
+final public class ClassesDiff {
 
     private final static String REF_HEADS = "refs/heads/";
 
-
-    public static Set<ClassFileMethodInfo> diffMethodsTwoBranch(String gitDir, String newBranch, String oldBranch) {
+    public static Set<ClassMethodInfo> diffMethodsTwoBranch(String gitDir, String newBranch, String oldBranch) {
         try {
             Git git = Git.open(new File(gitDir));
             Repository repo = git.getRepository();
@@ -54,7 +53,7 @@ public class ClassesDiff {
             //  设置比较器为忽略空白字符对比（Ignores all whitespace）
             df.setDiffComparator(RawTextComparator.WS_IGNORE_ALL);
             df.setRepository(git.getRepository());
-            Set<ClassFileMethodInfo> methods = batchPrepareDiffMethod(git, newBranch, oldBranch, df, diffs);
+            Set<ClassMethodInfo> methods = batchPrepareDiffMethod(git, newBranch, oldBranch, df, diffs);
             return methods;
         } catch (Exception e) {
             e.printStackTrace();
@@ -81,11 +80,11 @@ public class ClassesDiff {
         }
     }
 
-    private static Set<ClassFileMethodInfo> batchPrepareDiffMethod(final Git git, final String branchName, final String oldBranchName, final DiffFormatter df, List<DiffEntry> diffs) {
+    private static Set<ClassMethodInfo> batchPrepareDiffMethod(final Git git, final String branchName, final String oldBranchName, final DiffFormatter df, List<DiffEntry> diffs) {
 
-        Set<ClassFileMethodInfo> total = new HashSet<>();
+        Set<ClassMethodInfo> total = new HashSet<>();
         for (DiffEntry diffEntry : diffs) {
-            Set<ClassFileMethodInfo> methods = prepareDiffMethod(git, branchName, oldBranchName, df, diffEntry);
+            Set<ClassMethodInfo> methods = prepareDiffMethod(git, branchName, oldBranchName, df, diffEntry);
             if (methods != null) {
                 total.addAll(methods);
             }
@@ -104,7 +103,7 @@ public class ClassesDiff {
      * @param diffEntry
      * @return
      */
-    private synchronized static Set<ClassFileMethodInfo> prepareDiffMethod(Git git, String newBranchName, String oldBranchName, DiffFormatter df, DiffEntry diffEntry) {
+    private synchronized static Set<ClassMethodInfo> prepareDiffMethod(Git git, String newBranchName, String oldBranchName, DiffFormatter df, DiffEntry diffEntry) {
 
         try {
             String newFilePath = diffEntry.getNewPath();
@@ -112,16 +111,16 @@ public class ClassesDiff {
             if (!newFilePath.endsWith(".class") || changeType == DiffEntry.ChangeType.DELETE) {
                 return new HashSet<>();
             }
-            Set<ClassFileMethodInfo> newMethods = getBranchFileMethodInfo(git, newBranchName, newFilePath);
+            Set<ClassMethodInfo> newMethods = getBranchFileMethodInfo(git, newBranchName, newFilePath);
 
             if (changeType == DiffEntry.ChangeType.ADD
                     || changeType == DiffEntry.ChangeType.RENAME) {
                 return newMethods;
             } else if (changeType == DiffEntry.ChangeType.MODIFY) {
                 String oldFilePath = diffEntry.getOldPath();
-                Set<ClassFileMethodInfo> oldMethods = getBranchFileMethodInfo(git, oldBranchName, oldFilePath);
+                Set<ClassMethodInfo> oldMethods = getBranchFileMethodInfo(git, oldBranchName, oldFilePath);
 
-                Set<ClassFileMethodInfo> res = new HashSet<>(newMethods);
+                Set<ClassMethodInfo> res = new HashSet<>(newMethods);
                 res.removeAll(oldMethods);
 
                 //  获取文件差异位置，从而统计差异的行数，如增加行数，减少行数
@@ -149,7 +148,7 @@ public class ClassesDiff {
         }
     }
 
-    public static Set<ClassFileMethodInfo> getBranchFileMethodInfo(Git git, String branchName, String classFilePath) throws IOException {
+    public static Set<ClassMethodInfo> getBranchFileMethodInfo(Git git, String branchName, String classFilePath) throws IOException {
 
 
         byte[] newFileContent = getBranchSpecificFileContent(git, branchName, classFilePath);

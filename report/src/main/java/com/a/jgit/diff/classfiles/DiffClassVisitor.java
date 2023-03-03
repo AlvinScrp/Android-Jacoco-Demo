@@ -24,13 +24,13 @@ import com.a.jgit.Utils;
 public class DiffClassVisitor extends ClassVisitor {
     private String className;
 
-    Set<ClassFileMethodInfo> methodInfos = new HashSet<>();
+    Set<ClassMethodInfo> methodInfos = new HashSet<>();
 
     public DiffClassVisitor() {
         super(Opcodes.ASM9);
     }
 
-    public Set<ClassFileMethodInfo> getMethodInfos() {
+    public Set<ClassMethodInfo> getMethodInfos() {
         return methodInfos;
     }
 
@@ -58,38 +58,23 @@ public class DiffClassVisitor extends ClassVisitor {
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
 //        System.out.println("className:" + className + "  methodName:" + name + "  desc:" + desc + "  signature:" + signature);
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-        final ClassFileMethodInfo methodInfo = new ClassFileMethodInfo();
+        final ClassMethodInfo methodInfo = new ClassMethodInfo();
         methodInfo.className = className;
         methodInfo.methodName = name;
         methodInfo.desc = desc;
         methodInfo.signature = signature;
         methodInfo.exceptions = exceptions;
-        mv = new MethodVisitor(Opcodes.ASM5, mv) {
+        mv = new MethodVisitor(Opcodes.ASM9, mv) {
             StringBuilder builder = new StringBuilder();
 
-            //开始访问方法体
-            @Override
-            public void visitCode() {
-//                System.out.println("visitCode");
-                super.visitCode();
-            }
-
-            //访问方法一个参数
-            //todo 需要验证哪些代码会调用这个方法
             @Override
             public void visitParameter(String name, int access) {
                 builder.append(name);
                 builder.append(access);
-//                System.out.println("visitParameter--name:" + name + "  access" + access);
                 super.visitParameter(name, access);
             }
 
-            //访问方法的一个注解
-            //@TargetApi(21)
-            //public static void Toast(Context context, String s) {
-            //       ...
-            //}
-            //todo 注解中的参数21不知道在哪里获取
+
             @Override
             public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
                 builder.append(desc);
@@ -98,9 +83,7 @@ public class DiffClassVisitor extends ClassVisitor {
                 return super.visitAnnotation(desc, visible);
             }
 
-            //访问方法签名上的一个类型的注解
-            //不知道怎么访问这个，但是需要参与md5
-            //todo 需要验证哪些代码会调用这个方法
+
             @Override
             public AnnotationVisitor visitTypeAnnotation(int typeRef, TypePath typePath, String desc, boolean visible) {
                 builder.append(typeRef);
@@ -111,10 +94,7 @@ public class DiffClassVisitor extends ClassVisitor {
                 return super.visitTypeAnnotation(typeRef, typePath, desc, visible);
             }
 
-            //访问参数的注解，返回一个AnnotationVisitor可以访问该注解值;
-            //public static void Toast(@Nullable Context context, @Nullable String s) {
-            //     ...
-            // }
+
             @Override
             public AnnotationVisitor visitParameterAnnotation(int parameter, String desc, boolean visible) {
                 builder.append(parameter);
@@ -124,13 +104,6 @@ public class DiffClassVisitor extends ClassVisitor {
                 return super.visitParameterAnnotation(parameter, desc, visible);
             }
 
-            //访问此方法的非标准属性
-            //不知道干嘛的，暂不参与md5
-            @Override
-            public void visitAttribute(Attribute attr) {
-//                System.out.println("visitAttribute--attr:" + attr.toString());
-                super.visitAttribute(attr);
-            }
 
             //访问方法局部变量的当前状态以及操作栈成员信息，方法栈必须是expanded 格式或者compressed格式,该方法必须在visitInsn方法前调用
             //visitFrame--type:3  nLocal:0  local:[Ljava.lang.Object;@b071554  nStack:0  stack:[Ljava.lang.Object;@702b9ffd
@@ -140,7 +113,6 @@ public class DiffClassVisitor extends ClassVisitor {
                 builder.append(type);
                 builder.append(nLocal);
                 builder.append(nStack);
-//                System.out.println("visitFrame--type:" + type + "  nLocal:" + nLocal + "  local:" + local.toString() + "  nStack:" + nStack + "  stack:" + stack);
                 super.visitFrame(type, nLocal, local, nStack, stack);
             }
 
@@ -149,7 +121,6 @@ public class DiffClassVisitor extends ClassVisitor {
             @Override
             public void visitInsn(int opcode) {
                 builder.append(opcode);
-//                System.out.println("visitInsn--opcode:" + opcode);
                 super.visitInsn(opcode);
             }
 
@@ -159,7 +130,6 @@ public class DiffClassVisitor extends ClassVisitor {
             public void visitIntInsn(int opcode, int operand) {
                 builder.append(opcode);
                 builder.append(operand);
-//                System.out.println("visitIntInsn--opcode:" + opcode + "  operand:" + operand);
                 super.visitIntInsn(opcode, operand);
             }
 
@@ -169,7 +139,6 @@ public class DiffClassVisitor extends ClassVisitor {
             public void visitVarInsn(int opcode, int var) {
                 builder.append(opcode);
                 builder.append(var);
-//                System.out.println("visitVarInsn--opcode:" + opcode + "  var:" + var);
                 super.visitVarInsn(opcode, var);
             }
 
@@ -179,7 +148,6 @@ public class DiffClassVisitor extends ClassVisitor {
             public void visitTypeInsn(int opcode, String type) {
                 builder.append(opcode);
                 builder.append(type);
-//                System.out.println("visitTypeInsn--opcode:" + opcode + "  type:" + type);
                 super.visitTypeInsn(opcode, type);
             }
 
@@ -191,7 +159,6 @@ public class DiffClassVisitor extends ClassVisitor {
                 builder.append(owner);
                 builder.append(name);
                 builder.append(desc);
-//                System.out.println("visitFieldInsn--opcode:" + opcode + "  owner:" + owner + "  name:" + name + "  desc:" + desc);
                 super.visitFieldInsn(opcode, owner, name, desc);
             }
 
@@ -204,7 +171,6 @@ public class DiffClassVisitor extends ClassVisitor {
                 builder.append(name);
                 builder.append(desc);
                 builder.append(itf);
-//                System.out.println("visitMethodInsn--opcode:" + opcode + "  owner:" + owner + "  name:" + name + "  desc:" + desc + "  itf:" + itf);
                 super.visitMethodInsn(opcode, owner, name, desc, itf);
             }
 
@@ -215,7 +181,6 @@ public class DiffClassVisitor extends ClassVisitor {
                 builder.append(name);
                 builder.append(desc);
                 builder.append(bsm.toString());
-//                System.out.println("visitInvokeDynamicInsn--name:" + name + "  desc:" + desc + "  bsm:" + bsm.toString() + "  bsmArgs:" + bsmArgs.toString());
                 super.visitInvokeDynamicInsn(name, desc, bsm, bsmArgs);
             }
 
@@ -224,15 +189,7 @@ public class DiffClassVisitor extends ClassVisitor {
             @Override
             public void visitJumpInsn(int opcode, Label label) {
                 builder.append(opcode);
-//                System.out.println("visitJumpInsn--opcode:" + opcode + "  label:" + label.toString());
                 super.visitJumpInsn(opcode, label);
-            }
-
-            //访问label，当会在调用该方法后访问该label标记一个指令
-            //不作为方法md5的条件
-            @Override
-            public void visitLabel(Label label) {
-                super.visitLabel(label);
             }
 
             //访问ldc指令，也就是访问常量池索引
@@ -253,7 +210,6 @@ public class DiffClassVisitor extends ClassVisitor {
             public void visitIincInsn(int var, int increment) {
                 builder.append(var);
                 builder.append(increment);
-//                System.out.println("visitIincInsn--var:" + var + "  increment:" + increment);
                 super.visitIincInsn(var, increment);
             }
 
@@ -263,7 +219,6 @@ public class DiffClassVisitor extends ClassVisitor {
             public void visitTableSwitchInsn(int min, int max, Label dflt, Label... labels) {
                 builder.append(min);
                 builder.append(max);
-//                System.out.println("visitTableSwitchInsn--min:" + min + "  max:" + max + "  dflt:" + dflt.toString() + "  labels:" + labels.toString());
                 super.visitTableSwitchInsn(min, max, dflt, labels);
             }
 
@@ -278,7 +233,6 @@ public class DiffClassVisitor extends ClassVisitor {
                         }
                     }
                 }
-//                System.out.println("visitLookupSwitchInsn--dflt:" + dflt.toString() + "  keys:" + keys.toString() + "  labels:" + labels.toString());
                 super.visitLookupSwitchInsn(dflt, keys, labels);
             }
 
@@ -288,7 +242,6 @@ public class DiffClassVisitor extends ClassVisitor {
             public void visitMultiANewArrayInsn(String desc, int dims) {
                 builder.append(desc);
                 builder.append(dims);
-//                System.out.println("visitMultiANewArrayInsn--desc:" + desc + "  dims:" + dims);
                 super.visitMultiANewArrayInsn(desc, dims);
             }
 
@@ -300,7 +253,6 @@ public class DiffClassVisitor extends ClassVisitor {
                 builder.append(typePath.toString());
                 builder.append(desc);
                 builder.append(visible);
-//                System.out.println("visitInsnAnnotation--typeRef:" + typeRef + "  TypePath:" + typePath.toString() + "  desc:" + desc + "  visible:" + visible);
                 return super.visitInsnAnnotation(typeRef, typePath, desc, visible);
             }
 
@@ -309,7 +261,6 @@ public class DiffClassVisitor extends ClassVisitor {
             @Override
             public void visitTryCatchBlock(Label start, Label end, Label handler, String type) {
                 builder.append(type);
-//                System.out.println("visitTryCatchBlock--start:" + start.toString() + "  end:" + end.toString() + "  handler:" + handler.toString() + "  type:" + type);
                 super.visitTryCatchBlock(start, end, handler, type);
             }
 
@@ -321,7 +272,6 @@ public class DiffClassVisitor extends ClassVisitor {
                 builder.append(typePath.toString());
                 builder.append(desc);
                 builder.append(visible);
-//                System.out.println("visitTryCatchAnnotation--typeRef:" + typeRef + "  typePath:" + typePath.toString() + "  desc:" + desc + "  visible:" + visible);
                 return super.visitTryCatchAnnotation(typeRef, typePath, desc, visible);
             }
 
@@ -333,7 +283,6 @@ public class DiffClassVisitor extends ClassVisitor {
                 builder.append(desc);
                 builder.append(signature);
                 builder.append(index);
-//                System.out.println("visitLocalVariable--name:" + name + "  desc:" + desc + "  signature:" + signature + "  start:" + start.toString() + "  end:" + end.toString() + "  index:" + index);
                 super.visitLocalVariable(name, desc, signature, start, end, index);
             }
 
@@ -350,7 +299,6 @@ public class DiffClassVisitor extends ClassVisitor {
                 }
                 builder.append(desc);
                 builder.append(visible);
-//                System.out.println("visitLocalVariableAnnotation--typeRef:" + typeRef + "  TypePath:" + typePath.toString() + "  desc:" + desc + "  visible" + visible);
                 return super.visitLocalVariableAnnotation(typeRef, typePath, start, end, index, desc, visible);
             }
 
@@ -367,7 +315,6 @@ public class DiffClassVisitor extends ClassVisitor {
             public void visitMaxs(int maxStack, int maxLocals) {
                 builder.append(maxStack);
                 builder.append(maxLocals);
-//                System.out.println("visitMaxs--maxStack:" + maxStack + "  maxLocals:" + maxLocals);
                 super.visitMaxs(maxStack, maxLocals);
             }
 
@@ -377,7 +324,7 @@ public class DiffClassVisitor extends ClassVisitor {
                 String  md5 = Utils.MD5Encode(builder.toString());
                 methodInfo.md5 = md5;
                 methodInfos.add(methodInfo);
-//                System.out.println("visitEnd>>>md5:" + md5);
+                System.out.println("visitEnd>>>md5:" + md5);
                 super.visitEnd();
             }
         };
