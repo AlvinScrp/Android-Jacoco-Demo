@@ -324,7 +324,7 @@ public class DiffClassVisitor extends ClassVisitor {
                 String  md5 = Utils.MD5Encode(builder.toString());
                 methodInfo.md5 = md5;
                 methodInfos.add(methodInfo);
-                System.out.println("visitEnd>>>md5:" + md5);
+//                System.out.println("visitEnd>>>md5:" + md5);
                 super.visitEnd();
             }
         };

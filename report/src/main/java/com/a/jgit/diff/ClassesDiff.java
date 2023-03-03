@@ -2,9 +2,6 @@ package com.a.jgit.diff;
 
 import com.a.jgit.diff.classfiles.ClassMethodInfo;
 import com.a.jgit.diff.classfiles.DiffClassVisitor;
-import com.a.jgit.diff.sourcecode.ASTGenerator;
-import com.a.jgit.diff.sourcecode.IASTGenerator;
-import com.a.jgit.diff.sourcecode.KotlinASTGenerator;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.diff.DiffEntry;
@@ -185,19 +182,5 @@ final public class ClassesDiff {
         byte[] bytes = loader.getBytes();
         walk.dispose();
         return bytes;
-    }
-
-    public static boolean isKtFile(String filePath) {
-        return filePath.endsWith(".kt");
-    }
-
-    public static boolean isJavaFile(String filePath) {
-        return filePath.endsWith(".java");
-    }
-
-    public static IASTGenerator createGenerator(String sourceContent, String filePath) {
-
-        return isKtFile(filePath) ? new KotlinASTGenerator(sourceContent, filePath) : new ASTGenerator(sourceContent);
-
     }
 }

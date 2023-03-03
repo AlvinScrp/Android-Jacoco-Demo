@@ -8,14 +8,12 @@ java {
     targetCompatibility = JavaVersion.VERSION_1_8
 }
 
-//def jgitVersion = "5.13.0.202109080827-r"
-def jgitVersion = "6.3.0.202209071007-r"
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-common:1.7.20"
-    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
-    implementation "org.jetbrains.kotlin:kotlin-compiler-embeddable:1.7.20"
-    implementation "org.eclipse.jgit:org.eclipse.jgit:${jgitVersion}"
+//    implementation "org.jetbrains.kotlin:kotlin-stdlib-common:1.7.20"
+//    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+//    implementation "org.jetbrains.kotlin:kotlin-compiler-embeddable:1.7.20"
+    implementation "org.eclipse.jgit:org.eclipse.jgit:6.3.0.202209071007-r"
     implementation "org.eclipse.jdt:org.eclipse.jdt.core:3.19.0"
     implementation 'org.slf4j:slf4j-simple:1.7.36'
 

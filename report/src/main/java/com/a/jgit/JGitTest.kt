@@ -1,7 +1,6 @@
 package com.a.jgit
 
 import com.a.jgit.diff.ClassesDiff
-import com.a.jgit.diff.SourceCodeDiff
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.lib.Ref
 import org.eclipse.jgit.lib.Repository
@@ -19,10 +18,6 @@ fun main(args: Array<String>) {
 
     getDiffFileOfTwoBranch(dir, "build-2", "build-1")
 
-    val classInfoList = SourceCodeDiff.diffMethodsTwoBranch(dir, "build-2", "build-1")
-    println("-----------")
-    classInfoList.forEach { it.methodInfos.forEach { println(it) } }
-    println("-----------")
     val methods = ClassesDiff.diffMethodsTwoBranch(dir, "build-2", "build-1")
     methods.forEach { println(it) }
 
