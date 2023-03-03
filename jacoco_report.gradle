@@ -27,9 +27,9 @@ def fileFilter = [
         '**/*_Provide*Factory*.*',
         '**/*Extensions*.*'
 ]
-def moduleProjects = project.rootProject.subprojects
+Set<Project> moduleProjects = project.rootProject.subprojects
 println("================")
-moduleProjects.forEach { print("${it.name} , ") }
+moduleProjects.forEach { println("${it.rootDir} ,${it.projectDir} ") }
 println("================")
 def sourceDirs = moduleProjects.collect { "${it.projectDir}/src/main/java" }
 def javaClassDir = moduleProjects.collect { "${it.projectDir}/build/intermediates/javac/dailyDebug" }

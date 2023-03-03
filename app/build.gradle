@@ -1,11 +1,12 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+    id 'kotlin-kapt'
 }
-apply from: rootProject.file('jacoco.gradle')
-
+apply from: rootProject.file('jacoco_report.gradle')
 
 import com.a.plugin.cc.CoveragePlugin
+import com.a.plugin.buildbackup.BackupForCocoPlugin
 
 apply plugin: CoveragePlugin
 coverage {
@@ -13,10 +14,17 @@ coverage {
     includes = ["com.a.*"]
     instrumentType = 1
 }
+apply plugin: BackupForCocoPlugin
+backupForCoco{
+    excludeModules = ["plugin","report","rt-no-op"]
+}
 
 android {
     namespace 'com.a.jacocotest'
     compileSdk 33
+
+    // ./gradlew installDailyDebug -PjenkinsBuildNum=200
+    def buildNum = projectPropertyOf("jenkinsBuildNum", "-1").toInteger()
 
     defaultConfig {
         applicationId "com.a.jacocotest"
@@ -26,6 +34,8 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        manifestPlaceholders = [jenkins_build_num: buildNum]
     }
 
 
@@ -37,6 +47,9 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.4.1'
     implementation 'com.google.android.material:material:1.5.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.4.1'
+    implementation 'androidx.activity:activity-compose:1.4.0'
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.4.0"
 //    implementation project(":lib")
     implementation project(":other")
     testImplementation 'junit:junit:4.13.2'
@@ -48,4 +61,8 @@ dependencies {
 //        "${it}Api" project(path: ':rt')
 //    }
     api project(path: ':rt')
+}
+
+String projectPropertyOf(String key, String defValue) {
+    return project.hasProperty(key) ? project.property(key).toString() : defValue
 }

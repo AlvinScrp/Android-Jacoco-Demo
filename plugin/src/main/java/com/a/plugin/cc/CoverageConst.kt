@@ -8,6 +8,7 @@ package com.a.plugin.cc
      ".*BuildConfig.*",
      ".*Manifest.*",
      ".*DataBinderMapperImpl",
+     ".*DataBinderMapperImpl\\$.*",
      ".*DataBindingTriggerClass",
      ".*ViewInjector.*",
      ".*ViewBinder.*",

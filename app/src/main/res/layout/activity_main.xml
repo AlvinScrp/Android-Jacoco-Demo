@@ -62,7 +62,10 @@
 
         </androidx.appcompat.widget.LinearLayoutCompat>
 
-
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
         <Button
             android:layout_margin="10dp"
             android:textAllCaps="false"
@@ -71,6 +74,17 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="30dp"
             android:text="获取当前应用apk的MD5" />
+
+            <Button
+                android:layout_margin="10dp"
+                android:textAllCaps="false"
+                android:id="@+id/btnBuildNum"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="30dp"
+                android:text="meta build num" />
+
+        </androidx.appcompat.widget.LinearLayoutCompat>
         <View
             android:layout_width="10dp"
             android:layout_height="50dp"/>
