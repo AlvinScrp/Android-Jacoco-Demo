@@ -15,6 +15,7 @@ package com.a.report;
 import com.a.jgit.diff.ClassesDiff;
 import com.a.jgit.diff.classfiles.ClassMethodInfo;
 
+import org.eclipse.jgit.api.Git;
 import org.jacoco.core.analysis.Analyzer;
 import org.jacoco.core.analysis.CoverageBuilder;
 import org.jacoco.core.analysis.IBundleCoverage;
@@ -27,8 +28,6 @@ import org.jacoco.report.html.HTMLFormatter;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -43,22 +42,28 @@ public class ReportGenerator {
 
     private final String title;
 
-    private final String executionDataDir;
-    private final List<File> classesDirectories;
-    private final List<File> sourceDirectories;
-    private final File reportDirectory;
+    private final String execFilePath;
+    /**
+     * 路径必须精确到xxx/src/main/java,即包名的上一级
+     */
+    private final String sourceDir;
+    /**
+     * 路径不用精确，内部会递推穷举
+     */
+    private final String classesDir;
+    private final String reportDir;
 
     private ExecFileLoader execFileLoader;
 
     /**
      * Create a new generator based for the given project.
      */
-    public ReportGenerator(final String execDir, List<File> classesDir, List<File> sourceDir, File reportDir) {
+    public ReportGenerator(String execFilePath, String sourceDir, String classesDir, String reportDir) {
         this.title = "CodeCoverageReport";
-        this.executionDataDir = execDir;
-        this.classesDirectories = classesDir;
-        this.sourceDirectories = sourceDir;
-        this.reportDirectory = reportDir;
+        this.execFilePath = execFilePath;
+        this.sourceDir = sourceDir;
+        this.classesDir = classesDir;
+        this.reportDir = reportDir;
     }
 
     /**
@@ -66,22 +71,12 @@ public class ReportGenerator {
      *
      * @throws IOException
      */
-    public void create() throws IOException {
+    public void create() throws Exception {
 
-        // Read the jacoco.exec file. Multiple data files could be merged
-        // at this point
         try {
             loadExecutionData();
-            // Run the structure analyzer on a single class folder to build up
-            // the coverage model. The process would be similar if your classes
-            // were in a jar file. Typically you would create a bundle for each
-            // class folder and each jar you want in your report. If you have
-            // more than one bundle you will need to add a grouping node to your
-            // report
-            final IBundleCoverage bundleCoverage = analyzeStructure();
-
+            IBundleCoverage bundleCoverage = analyzeStructure();
             createReport(bundleCoverage);
-
         } catch (Exception e) {//不中断流程
             e.printStackTrace();
             System.err.println(e.getMessage());
@@ -96,7 +91,7 @@ public class ReportGenerator {
         // configuration. In this case we use the defaults
         final HTMLFormatter htmlFormatter = new HTMLFormatter();
         final IReportVisitor visitor = htmlFormatter
-                .createVisitor(new FileMultiReportOutput(reportDirectory));
+                .createVisitor(new FileMultiReportOutput(new File(reportDir)));
 
         // Initialize the report with all of the execution and session
         // information. At this point the report doesn't know about the
@@ -107,11 +102,7 @@ public class ReportGenerator {
         // Populate the report structure with the bundle coverage information.
         // Call visitGroup if you need groups in your report.
         MultiSourceFileLocator sourceFileLocator = new MultiSourceFileLocator(4);
-        if (sourceDirectories != null || !sourceDirectories.isEmpty()) {
-            for (File source : sourceDirectories) {
-                sourceFileLocator.add(new DirectorySourceFileLocator(source, "utf-8", 4));
-            }
-        }
+        sourceFileLocator.add(new DirectorySourceFileLocator(new File(sourceDir), "utf-8", 4));
         visitor.visitBundle(bundleCoverage, sourceFileLocator);
         // Signal end of structure information to allow report to write all
         // information out
@@ -119,56 +110,33 @@ public class ReportGenerator {
 
     }
 
-    private void loadExecutionData() {
+    private void loadExecutionData() throws Exception {
         execFileLoader = new ExecFileLoader();
-        load(execFileLoader, executionDataDir);
+        load(execFileLoader, execFilePath);
 
     }
 
-
-    /**
-     * 加载dump文件
-     *
-     * @param loader
-     * @throws RuntimeException
-     */
-    public void load(final ExecFileLoader loader, String dir) throws RuntimeException {
-        for (final File fileSet : fileSets(dir)) {
-            final File inputFile = new File(dir, fileSet.getName());
-            if (inputFile.isDirectory()) {
-                continue;
+    public void load(final ExecFileLoader loader, String dir) throws Exception {
+        File file = new File(dir);
+        boolean hasExecFile = false;
+        if (file.exists()) {
+            File[] files = file.isDirectory() ? file.listFiles() : new File[]{file};
+            for (File itemFile : files) {
+                if (isExecFile(itemFile)) {
+                    loader.load(itemFile);
+                    hasExecFile = true;
+                }
             }
-            try {
-                System.out.println("Loading execution data file " + inputFile.getAbsolutePath());
-                loader.load(inputFile);
-            } catch (final IOException e) {
-                throw new RuntimeException("Unable to read "
-                        + inputFile.getAbsolutePath(), e);
-            }
+        }
+        if (!hasExecFile) {
+            throw new IllegalArgumentException("日志文件不存在 " + dir);
         }
     }
 
-    private List<File> fileSets(String dir) {
-        System.out.println(dir);
-        List<File> fileSetList = new ArrayList<File>();
-        File path = new File(dir);
-        if (!path.exists()) {
-            throw new NullPointerException("No path name is :" + dir);
-        } else if (path.isFile() && (path.getName().endsWith(".exec") || path.getName().endsWith(".ec"))) {
-            fileSetList.add(path);
-            return fileSetList;
-        }
-        File[] files = path.listFiles();
-        if (files == null || files.length == 0) {
-            throw new NullPointerException(path.getAbsolutePath() + " files is empty");
-        }
-
-        for (File file : files) {
-            if (file.getName().endsWith(".exec") || file.getName().endsWith(".ec")) {
-                fileSetList.add(file);
-            }
-        }
-        return fileSetList;
+    private boolean isExecFile(File file) {
+        return file.exists()
+                && file.isFile()
+                && (file.getName().endsWith(".exec") || file.getName().endsWith(".ec"));
     }
 
 
@@ -176,12 +144,13 @@ public class ReportGenerator {
         final CoverageBuilder coverageBuilder = new CoverageBuilder();
         final Analyzer analyzer = new Analyzer(
                 execFileLoader.getExecutionDataStore(), coverageBuilder);
-
-        if (classesDirectories != null && !classesDirectories.isEmpty()) {
-            for (File classDir : classesDirectories) {
-                analyzer.analyzeAll(classDir);
-            }
-        }
+//        if (classesDirectories != null && !classesDirectories.isEmpty()) {
+//            for (File classDir : classesDirectories) {
+//                analyzer.analyzeAll(classDir);
+//            }
+//        }
+        int count = analyzer.analyzeAll(new File(classesDir));
+        System.out.println("---------classesDir:" + classesDir + " [count:" + count + "]---------");
 
         return coverageBuilder.getBundle(title);
     }
@@ -194,30 +163,49 @@ public class ReportGenerator {
      *             eclipse projects that will be used to generate reports for
      * @throws IOException
      */
-    public static void main(final String[] args) throws IOException {
+    public static void main(final String[] args) throws Exception {
 
-        String projectDir = "/Users/canglong/Documents/github_project/Android-Jacoco-Demo";
-        String buildProjectDir = "/Users/canglong/Documents/github_project/Android-Jacoco-Demo-builds";
+//         ecDir  reportOutDir  backupDir branch  relativeBranch
 
-        Set<ClassMethodInfo> methods = ClassesDiff.diffMethodsTwoBranch(buildProjectDir, "b5", "b4");
-        ReportConfigManager.getInstance().setDiff(methods);
-        ReportConfigManager.getInstance().setIncremental(false);
-        System.out.println("------->diff method start");
-        for (ClassMethodInfo method : methods) {
-            System.out.println(method.className + ":" + method.methodName);
+        ReportGeneratorParams p = ReportGeneratorParams.createFromArgs(args);
+
+        if (!p.isParamsValid()) {
+            StringBuilder help = new StringBuilder();
+            help.append("参数异常,重新输入。");
+            help.append("java -jar <jar file path>\n");
+            help.append(ReportGeneratorParams.key_ecFile + "  日志文件或目录，用于生成报告\n");
+            help.append(ReportGeneratorParams.key_backupDir + "   源码和编译产物git仓库本地目录，用于生成报告\n");
+            help.append(ReportGeneratorParams.key_branch + "    源码和编译产物git仓库分支，程序会将backupDir切换到当前branch\n");
+            help.append(ReportGeneratorParams.key_relativeBranch + "   源码和编译产物git仓库相对分支，用于生成增量报告，空则全量\n");
+            help.append(ReportGeneratorParams.key_reportOutDir + "   报告输出目录\n");
+            help.append("参数设置方式，可以使用 --<参数名称>=<值> ");
+            System.out.println(help);
+            return;
         }
-        System.out.println("------->diff method end");
-        File execDir = new File(projectDir + "/build/ec");
-        File reportDir = new File(projectDir + "/build/report");
+        generate(p);
+    }
 
-        List<File> sourceDirs = new ArrayList<>();
-        sourceDirs.add(new File(buildProjectDir + "/src/main/java"));
+    public static void generate(ReportGeneratorParams p) throws Exception {
 
-        List<File> classDirs = new ArrayList<>();
-//        classDirs.add(new File(buildProjectDir + "/app/build/tmp/kotlin-classes"));
-        classDirs.add(new File(buildProjectDir + "/build"));
+        String branch = p.getBranch();
+        Git git = Git.open(new File(p.getBackupDir()));
+        git.pull().call();
+        git.checkout().setName(branch).call();
 
-        ReportGenerator generator = new ReportGenerator(execDir.getAbsolutePath(), classDirs, sourceDirs, reportDir);
+        String relativeBranch = p.getRelativeBranch();
+        if (relativeBranch != null && relativeBranch.length() > 0) {
+            Set<ClassMethodInfo> methods = ClassesDiff.diffMethodsTwoBranch(p.getBackupDir(), branch, relativeBranch);
+            ReportConfigManager.getInstance().setDiff(methods);
+            ReportConfigManager.getInstance().setIncremental(true);
+        } else {
+            ReportConfigManager.getInstance().setIncremental(false);
+        }
+
+        String backupDir = p.getBackupDir();
+        String sourceDir = backupDir + "/src/main/java";
+        String classDir = backupDir + "/build";
+
+        ReportGenerator generator = new ReportGenerator(p.getEcFile(), sourceDir, classDir, p.getReportOutDir());
         generator.create();
     }
 

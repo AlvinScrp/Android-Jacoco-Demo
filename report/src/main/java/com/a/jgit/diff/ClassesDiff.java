@@ -51,6 +51,12 @@ final public class ClassesDiff {
             df.setDiffComparator(RawTextComparator.WS_IGNORE_ALL);
             df.setRepository(git.getRepository());
             Set<ClassMethodInfo> methods = batchPrepareDiffMethod(git, newBranch, oldBranch, df, diffs);
+
+            System.out.println("------->diff method start");
+            for (ClassMethodInfo method : methods) {
+                System.out.println(method.className + ":" + method.methodName);
+            }
+            System.out.println("------->diff method end");
             return methods;
         } catch (Exception e) {
             e.printStackTrace();
@@ -59,7 +65,7 @@ final public class ClassesDiff {
     }
 
 
-    private static AbstractTreeIterator prepareTreeParser(Repository repository, String ref) throws IOException {
+    public static AbstractTreeIterator prepareTreeParser(Repository repository, String ref) throws IOException {
         // from the commit we can build the tree which allows us to construct the TreeParser
         Ref head = repository.exactRef(ref);
         try (RevWalk walk = new RevWalk(repository)) {
