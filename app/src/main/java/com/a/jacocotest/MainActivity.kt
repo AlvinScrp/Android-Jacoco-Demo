@@ -1,6 +1,7 @@
 package com.a.jacocotest
 
 import android.content.Intent
+import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -23,25 +24,34 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         binding.btn1.setOnClickListener { valueClick.onOkClick() }
-        binding.btn2.setOnClickListener { valueClick.onBadClick()  }
+        binding.btn2.setOnClickListener { valueClick.onBadClick() }
         binding.btnStartComposeActivity.setOnClickListener {
 //            startActivity(Intent(this@MainActivity,ComposeActivity::class.java))
         }
         binding.btnStartOtherActivity.setOnClickListener {
-            startActivity(Intent(this@MainActivity,OtherActivity::class.java))
+            startActivity(Intent(this@MainActivity, OtherActivity::class.java))
         }
 
-        binding.btnApkMd5.setOnClickListener (listener)
+        binding.btnApkMd5.setOnClickListener(listener)
         binding.btnGenJacoco.setOnClickListener { JacocoHelper.generateCoverageFile(this@MainActivity) }
-
-        Log.d("alvin","oncreate")
+        binding.btnBuildNum.setOnClickListener { getMetaBuildNum() }
+        Log.d("alvin", "oncreate")
     }
 
     override fun onResume() {
         super.onResume()
-        Log.d("alvin","onResume")
+        Log.d("alvin", "onResume")
     }
 
+    private fun getMetaBuildNum() {
+        val context = this
+        val appInfo = context.packageManager.getApplicationInfo(
+            context.packageName,
+            PackageManager.GET_META_DATA
+        );
+        val buildNum = appInfo.metaData.getString("JENKINS_BUILD_NUM");
+        binding.tv.text = "buildNum:${buildNum}"
+    }
 
     private fun updateText(ok: Boolean) {
         val text = if (ok) {
@@ -62,7 +72,7 @@ class MainActivity : AppCompatActivity() {
         ApkUtil.getApkMD5(this@MainActivity)
         PrivacyVisitor.visitPrivacy(this@MainActivity)
     }
-    val valueClick = object :OnEventListener{
+    val valueClick = object : OnEventListener {
         override fun onOkClick() {
             updateText(true)
         }
