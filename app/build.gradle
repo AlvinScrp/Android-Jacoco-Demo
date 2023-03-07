@@ -11,8 +11,8 @@ import com.a.plugin.buildbackup.BackupForCocoPlugin
 apply plugin: CoveragePlugin
 coverage {
     enable = true
+    unSupportVariants = ["onlineRelease"]
     includes = ["com.a.*"]
-    instrumentType = 1
 }
 apply plugin: BackupForCocoPlugin
 backupForCoco{

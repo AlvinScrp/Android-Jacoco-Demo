@@ -24,6 +24,8 @@ object CoverageConfig {
 
     private var exclude: MutableSet<String> = mutableSetOf()
 
+    private var unSupportVariants: MutableSet<String> = mutableSetOf()
+
     fun configByExtension(project: Project) {
 
         val extension: CoverageExtension? =
@@ -32,6 +34,10 @@ object CoverageConfig {
 //        println("extension:${extension?.instrumentType}")
 
         extension?.enable?.let { enable = it }
+        extension?.unSupportVariants
+            ?.takeIf { it.isNotEmpty() }
+            ?.forEach { unSupportVariants.add(it.toLowerCase()) }
+
         extension?.instrumentType?.let { instrumentType = it }
 
         extension?.includes
@@ -46,6 +52,10 @@ object CoverageConfig {
 
     }
 
+    fun isVariantSupport(variantName: String): Boolean {
+        return unSupportVariants.contains(variantName.toLowerCase())
+    }
+
     fun matches(className: String): Boolean {
         val include = include.isEmpty() || include.any { Pattern.matches(it, className) }
         var exclude = this.exclude.any { Pattern.matches(it, className) }
@@ -53,13 +63,13 @@ object CoverageConfig {
 
         var match = include && !exclude
 //        println("$className , isMatch:${match}")
-        if(match) {
+        if (match) {
             FileUtil.record("$className , include,exclude,match:${include},${exclude},${match}\n")
         }
         return match
 //        return true
     }
 
-    fun is7_0_CustomTask(): Boolean = instrumentType == InstrumentType_7_0_custom_task
+    fun isTransformAsmTask(): Boolean = instrumentType == InstrumentType_7_0_transformASM_task
 
 }

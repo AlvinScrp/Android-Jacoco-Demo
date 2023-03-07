@@ -19,14 +19,15 @@ class CoveragePlugin : Plugin<Project> {
 
         androidComponents.onVariants { variant ->
             CoverageConfig.configByExtension(project)
-            if (CoverageConfig.enable) {
-                if (variant is ApplicationVariant) {
-                    FileUtil.initRecordFilePath("${project.buildDir.absolutePath}/coco_log/record.txt")
-                    if (CoverageConfig.is7_0_CustomTask()) {
-                        instrumentCustomTask(project, variant)
-                    } else {
-                        instrumentAGPAsmTask(project, variant)
-                    }
+            if (variant is ApplicationVariant
+                && CoverageConfig.enable
+                && CoverageConfig.isVariantSupport(variant.name)
+            ) {
+                FileUtil.initRecordFilePath("${project.buildDir.absolutePath}/coco_log/record.txt")
+                if (CoverageConfig.isTransformAsmTask()) {
+                    instrumentAGPAsmTask(project, variant)
+                } else {
+                    instrumentCustomTask(project, variant)
                 }
             }
         }
