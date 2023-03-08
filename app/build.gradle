@@ -23,8 +23,8 @@ android {
     namespace 'com.a.jacocotest'
     compileSdk 33
 
-    // ./gradlew installDailyDebug -PjenkinsBuildNum=200
-    def buildNum = projectPropertyOf("jenkinsBuildNum", "-1").toInteger()
+    // ./gradlew installDailyDebug  -PjenkinsBuildNum=200
+    def buildNum = projectPropertyOf("jenkinsBuildNum", "0")
 
     defaultConfig {
         applicationId "com.a.jacocotest"

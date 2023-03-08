@@ -24,6 +24,9 @@
         <meta-data
             android:name="JENKINS_BUILD_NUM"
             android:value="${jenkins_build_num}" />
+        <meta-data
+            android:name="JENKINS_APP_NAME"
+            android:value="jacocoDemo" />
     </application>
 
 </manifest>
