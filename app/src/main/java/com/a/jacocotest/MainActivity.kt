@@ -49,7 +49,7 @@ class MainActivity : AppCompatActivity() {
             context.packageName,
             PackageManager.GET_META_DATA
         );
-        val buildNum = appInfo.metaData.getString("JENKINS_BUILD_NUM");
+        val buildNum: String = appInfo.metaData.get("JENKINS_BUILD_NUM")?.toString() ?: "sdsdsd";
         binding.tv.text = "buildNum:${buildNum}"
     }
 

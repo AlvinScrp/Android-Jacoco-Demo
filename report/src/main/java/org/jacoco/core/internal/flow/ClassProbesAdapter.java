@@ -62,7 +62,7 @@ public class ClassProbesAdapter extends ClassVisitor
     public final MethodVisitor visitMethod(final int access, final String name,
                                            final String desc, final String signature,
                                            final String[] exceptions) {
-        System.out.println("className:" + this.name + " methodName：" + name + " desc:" + desc + " signature:" + signature);
+//        System.out.println("className:" + this.name + " methodName：" + name + " desc:" + desc + " signature:" + signature);
         final MethodProbesVisitor methodProbes;
         final MethodProbesVisitor mv = cv.visitMethod(access, name, desc,
                 signature, exceptions);

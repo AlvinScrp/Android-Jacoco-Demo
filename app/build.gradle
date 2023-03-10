@@ -5,18 +5,20 @@ plugins {
 }
 apply from: rootProject.file('jacoco_report.gradle')
 
-import com.a.plugin.cc.CoveragePlugin
-import com.a.plugin.buildbackup.BackupForCocoPlugin
+import com.a.coco.instrument.CocoInstrumentPlugin
+import com.a.coco.backup.CocoBackupPlugin
 
-apply plugin: CoveragePlugin
-coverage {
+apply plugin: CocoInstrumentPlugin
+cocoInstrument {
     enable = true
     unSupportVariants = ["onlineRelease"]
     includes = ["com.a.*"]
 }
-apply plugin: BackupForCocoPlugin
-backupForCoco{
-    excludeModules = ["plugin","report","rt-no-op"]
+
+// ./gradlew dailyDebugCocoBackup  --toDir==/Users/canglong/Documents/github_project/Android-Jacoco-Demo-builds  --buildNum=100
+apply plugin: CocoBackupPlugin
+cocoBackup {
+    excludeModules = ["plugin", "report", "rt-no-op"]
 }
 
 android {
@@ -35,7 +37,10 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        manifestPlaceholders = [jenkins_build_num: buildNum]
+        manifestPlaceholders = [
+                test_meta        : "test",
+                jenkins_build_num: buildNum,
+        ]
     }
 
 

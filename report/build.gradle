@@ -33,7 +33,7 @@ dependencies {
     implementation("org.ow2.asm:asm-commons:${asm_version}")
     implementation("org.ow2.asm:asm-tree:${asm_version}")
 }
-version '0.0.1-alpha2'
+version '0.0.1-alpha5'
 println(version)
 
 jar {
@@ -54,12 +54,19 @@ afterEvaluate {
     }
     compileJavaTask.dependsOn(cleanTask)
     def showJarTask = tasks.findByName("shadowJar")
+//    showJarTask.doLast {
+//        copy{
+//            from 'build/libs'
+//            into '/Users/canglong/Documents/android_project/fxj2/repo'
+//
+//        }
+//    }
 //    def generateMetadataTask = tasks.findByName("generateMetadataFileForReportReleasePublication")
     def generatePomFileTask = tasks.findByName("generatePomFileForReportReleasePublication")
 //    generateMetadataTask.dependsOn(showJarTask)
     generatePomFileTask.dependsOn(showJarTask)
 }
-
+// .gradlew publishReportReleasePublicationToMavenRepository
 publishing {
     publications {
         reportRelease(MavenPublication) {

@@ -6,11 +6,13 @@ import java.util.Map;
 public class ReportGeneratorParams {
 
 
-    public final static String key_ecFile = "--ecFile";// file or dir
+    public final static String key_ecFiles = "--ecFiles";// file or dir
     public final static String key_reportOutDir = "--reportOutDir";
     public final static String key_backupDir = "--backupDir";
-    public final static String key_branch = "--branch";
-    public final static String key_relativeBranch = "--relativeBranch";
+    public final static String key_buildNum = "--buildNum";
+    public final static String key_relativeBuildNum = "--relativebuildNum";
+    public final static String key_gitUsername = "--gitUsername";
+    public final static String key_gitPwd = "--gitPwd";
 
     private Map<String, String> paramsMap = new HashMap<>();
 
@@ -28,11 +30,11 @@ public class ReportGeneratorParams {
     }
 
     public boolean isParamsValid() {
-        return getEcFile() != null && getReportOutDir() != null && getBackupDir() != null && getBranch() != null;
+        return getEcFiles() != null && getReportOutDir() != null && getBackupDir() != null && getBuildNum() != null;
     }
 
-    public String getEcFile() {
-        return paramsMap.get( key_ecFile);
+    public String getEcFiles() {
+        return paramsMap.get(key_ecFiles);
     }
 
     public String getReportOutDir() {
@@ -43,11 +45,21 @@ public class ReportGeneratorParams {
         return paramsMap.get( key_backupDir);
     }
 
-    public String getBranch() {
-        return paramsMap.get( key_branch);
+    public String getBuildNum() {
+        return paramsMap.get(key_buildNum);
     }
 
-    public String getRelativeBranch() {
-        return paramsMap.get( key_relativeBranch);
+    public String getRelativeBuildNum() {
+        return paramsMap.get(key_relativeBuildNum);
     }
+
+    public String getGitUsername() {
+        return paramsMap.get( key_gitUsername);
+    }
+
+    public String getGitPwd() {
+        return paramsMap.get( key_gitPwd);
+    }
+
+
 }

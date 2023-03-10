@@ -37,22 +37,26 @@ dependencies {
 }
 
 group 'com.a.coco'
-version '0.0.1-alpha01'
+version '0.0.1-alpha06'
 
 gradlePlugin {
     plugins {
-        create("coco") {
-            id = 'com.a.plugin.coco'
-            implementationClass = 'com.a.plugin.cc.CoveragePlugin'
+        create("instrument") {
+            id = 'com.a.coco.instrument'
+            implementationClass = 'com.a.coco.instrument.CocoInstrumentPlugin'
+        }
+        create("backup") {
+            id = 'com.a.coco.backup'
+            implementationClass = 'com.a.coco.backup.CocoBackupPlugin'
         }
     }
 }
-//for Task  ./gradlew :plugin:publishPluginMavenPublicationToMavenRepository
+//for   ./gradlew :plugin:publishPluginMavenPublicationToMavenRepository
 publishing {
     repositories {
         maven {
 //            url '../repo'
-            url '/Users/canglong/Documents/android_project/fxj/repo'
+            url '/Users/canglong/Documents/android_project/fxj2/repo'
         }
     }
 }
