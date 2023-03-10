@@ -54,6 +54,13 @@ afterEvaluate {
     }
     compileJavaTask.dependsOn(cleanTask)
     def showJarTask = tasks.findByName("shadowJar")
+    showJarTask.doLast {
+        copy{
+            from 'build/libs'
+            into '/Users/canglong/Documents/android_project/fxj2/repo'
+
+        }
+    }
 //    def generateMetadataTask = tasks.findByName("generateMetadataFileForReportReleasePublication")
     def generatePomFileTask = tasks.findByName("generatePomFileForReportReleasePublication")
 //    generateMetadataTask.dependsOn(showJarTask)
