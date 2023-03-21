@@ -16,9 +16,11 @@ import com.a.jgit.diff.ClassesDiff;
 import com.a.jgit.diff.classfiles.ClassMethodInfo;
 import com.a.util.Utils;
 
+import org.eclipse.jgit.api.CreateBranchCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.PullCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.NetRCCredentialsProvider;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
@@ -33,7 +35,10 @@ import org.jacoco.report.MultiSourceFileLocator;
 import org.jacoco.report.html.HTMLFormatter;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -123,32 +128,24 @@ public class ReportGenerator {
         execFileLoader = new ExecFileLoader();
         ExecFileLoader loader = execFileLoader;
 
-        List<String> realItemPaths = new ArrayList<>();
+        List<String> filePaths = new ArrayList<>(execFilePaths);
 
-        for (String dir : execFilePaths) {
-            File file = new File(dir);
-            if (!file.exists()) {
-                continue;
-            }
-            File[] files = file.isDirectory() ? file.listFiles() : new File[]{file};
-            for (File itemFile : files) {
-                String itemPath = itemFile.getAbsolutePath();
-                if (isExecFile(itemFile) && !realItemPaths.contains(itemPath)) {
-                    realItemPaths.add(itemPath);
+        if (filePaths != null && !filePaths.isEmpty()) {
+            for (String filePath : filePaths) {
+                File file = new File(filePath);
+                if (isExecFile(file)) {
+                    System.out.println("ExecFileLoader load:" + filePath);
+                    loader.load(file);
                 }
-            }
-        }
-        if (!realItemPaths.isEmpty()) {
-            for (String realItemPath : realItemPaths) {
-                System.out.println("ExecFileLoader load:" + realItemPath);
-                loader.load(new File(realItemPath));
             }
         } else {
             throw new IllegalArgumentException("日志文件不存在 ");
         }
+
+
     }
 
-    private boolean isExecFile(File file) {
+    private static boolean isExecFile(File file) {
         return file.exists()
                 && file.isFile()
                 && (file.getName().endsWith(".exec") || file.getName().endsWith(".ec"));
@@ -209,16 +206,15 @@ public class ReportGenerator {
         prepareBackupDir(p);
         analysisAndSaveTwoBuildDiff(p);
 
-        List<String> ecPaths = splitEcFiles(p.getEcFiles());
+        List<String> realEcFilePaths = preHandleEcFilePaths(p.getEcFiles());
         String sourceDir = p.getBackupDir() + "/src/main/java";
         String classDir = p.getBackupDir() + "/build";
-        String reportDir = p.getReportOutDir() ;
+        String reportDir = p.getReportOutDir();
 
-        ReportGenerator generator = new ReportGenerator(ecPaths, sourceDir, classDir, reportDir);
+        ReportGenerator generator = new ReportGenerator(realEcFilePaths, sourceDir, classDir, reportDir);
         generator.create();
+        saveGenerateInfo(realEcFilePaths, reportDir);
     }
-
-
 
     private static void prepareBackupDir(ReportGeneratorParams p) throws IOException, GitAPIException {
         String branch = BRANCH_PREFIX + p.getBuildNum();
@@ -233,7 +229,22 @@ public class ReportGenerator {
             pullCommand.setCredentialsProvider(new NetRCCredentialsProvider());
         }
         pullCommand.call();
-        git.checkout().setName(branch).call();
+        List<Ref> refs = git.branchList().call();
+        boolean findRef = false;
+        for (Ref ref : refs) {
+            if (ref.getName().equals("refs/heads/" + branch)) {
+                findRef = true;
+                break;
+            }
+        }
+        if (findRef) {
+            git.checkout().setName(branch).call();
+        } else {
+            git.checkout().setCreateBranch(true).setName(branch)
+                    .setUpstreamMode(CreateBranchCommand.SetupUpstreamMode.SET_UPSTREAM)
+                    .setStartPoint("origin/" + branch).call();
+        }
+
     }
 
     private static void analysisAndSaveTwoBuildDiff(ReportGeneratorParams p) {
@@ -256,17 +267,66 @@ public class ReportGenerator {
         return format.format(time);
     }
 
-    private static   List<String> splitEcFiles(String ecFilesText){
-        List<String> ecPaths = new ArrayList<>();
+    private static List<String> preHandleEcFilePaths(String ecFilesText) {
+        List<String> realItemPaths = new ArrayList<>();
         try {
             String[] ecPathArray = ecFilesText.split(",");
             for (String path : ecPathArray) {
-                ecPaths.add(path);
+
+                File file = new File(path);
+                if (!file.exists()) {
+                    continue;
+                }
+                File[] files = file.isDirectory() ? file.listFiles() : new File[]{file};
+                for (File itemFile : files) {
+                    String itemPath = itemFile.getAbsolutePath();
+                    if (isExecFile(itemFile) && !realItemPaths.contains(itemPath)) {
+                        realItemPaths.add(itemPath);
+                    }
+                }
             }
+
+
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return ecPaths;
+        return realItemPaths;
+    }
+
+    private static void saveGenerateInfo(List<String> paths, String reportDir) {
+        OutputStream out = null;
+        try {
+            if (paths == null || paths.isEmpty()) {
+                return;
+            }
+            File dir = new File(reportDir);
+            if (!dir.exists() || !dir.isDirectory()) {
+                return;
+            }
+            File file = new File(reportDir, "report_log_info.text");
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            StringBuilder sb = new StringBuilder();
+            for (String path : paths) {
+                sb.append("," + path);
+            }
+            String text = sb.substring(1);
+            out = new FileOutputStream(file);
+            out.write(text.getBytes(StandardCharsets.UTF_8));
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (IOException e2) {
+                    e2.printStackTrace();
+                }
+            }
+        }
     }
 
 }
