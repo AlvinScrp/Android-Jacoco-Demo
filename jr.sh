@@ -14,7 +14,7 @@ adb pull $reportSdCardPath "$toDir"
 echo ""
 echo "======step2:执行gradle task:jacocoTestReport生成html (jacoco.gradle)"
 rm -rf "$projectDir/app/build/reports/jacoco"
-./gradlew jacocoTestReport
+./gradlew jacocoTestReport --stacktrace
 reportPath="$projectDir/app/build/reports/jacoco/jacocoTestReport/html/index.html"
 echo "jacoco报告地址:${reportPath}"
 

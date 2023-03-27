@@ -5,13 +5,11 @@ import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.view.View
 import android.view.View.OnClickListener
 import com.a.jacocotest.databinding.ActivityMainBinding
 import com.a.other.OtherActivity
 //import com.a.lib.ComposeActivity
 import com.a.privacy_sample.PrivacyVisitor
-import kotlin.concurrent.thread
 
 class MainActivity : AppCompatActivity() {
 
@@ -35,6 +33,10 @@ class MainActivity : AppCompatActivity() {
         binding.btnApkMd5.setOnClickListener(listener)
         binding.btnGenJacoco.setOnClickListener { JacocoHelper.generateCoverageFile(this@MainActivity) }
         binding.btnBuildNum.setOnClickListener { getMetaBuildNum() }
+
+        binding.btnA.setOnClickListener { binding.tv.text = MethodModifies.a() }
+        binding.btnB.setOnClickListener { binding.tv.text = MethodModifies.b2() }
+        binding.btnC.setOnClickListener { binding.tv.text = MethodModifies.c(true) }
         Log.d("alvin", "oncreate")
     }
 

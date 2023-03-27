@@ -65,26 +65,60 @@
         </androidx.appcompat.widget.LinearLayoutCompat>
 
         <androidx.appcompat.widget.LinearLayoutCompat
-            android:orientation="horizontal"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-        <Button
-            android:layout_margin="10dp"
-            android:textAllCaps="false"
-            android:id="@+id/btnApkMd5"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="30dp"
-            android:text="获取当前应用apk的MD5" />
+            android:orientation="horizontal">
 
             <Button
+                android:id="@+id/btnApkMd5"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_margin="10dp"
-                android:textAllCaps="false"
+                android:layout_marginStart="30dp"
+                android:text="获取当前应用apk的MD5"
+                android:textAllCaps="false" />
+
+            <Button
                 android:id="@+id/btnBuildNum"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_margin="10dp"
                 android:layout_marginStart="30dp"
-                android:text="meta build num" />
+                android:text="meta build num"
+                android:textAllCaps="false" />
+
+        </androidx.appcompat.widget.LinearLayoutCompat>
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnA"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:layout_marginStart="30dp"
+                android:text="a"
+                android:textAllCaps="false" />
+
+            <Button
+                android:id="@+id/btnB"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:layout_marginStart="30dp"
+                android:text="b"
+                android:textAllCaps="false" />
+
+            <Button
+                android:id="@+id/btnC"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:layout_marginStart="30dp"
+                android:text="c"
+                android:textAllCaps="false" />
 
         </androidx.appcompat.widget.LinearLayoutCompat>
         <View
