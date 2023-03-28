@@ -125,6 +125,7 @@ public class ClassAnalyzer extends ClassProbesVisitor
 		if (mc.containsCode()) {
 			// Only consider methods that actually contain code
 			coverage.addMethod(mc);
+			coverage.addMethodProbeInfo(name,desc,icc.getProbes(),icc.getProbeStart(),icc.getProbeEnd());
 		}
 
 	}

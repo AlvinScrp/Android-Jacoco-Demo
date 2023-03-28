@@ -2,7 +2,7 @@ package com.a.test;
 
 import com.a.classes.MethodInfo;
 import com.a.classes.MethodExtractClassVisitor;
-import com.a.diff.ClassesDiffTool;
+import com.a.diff.ClassesTool;
 
 import org.objectweb.asm.ClassReader;
 
@@ -29,7 +29,7 @@ public class MyTest {
 //                "b200", "b8");
 
 
-        Set<MethodInfo> methods2 = ClassesDiffTool.diffMethodsOfTwoDir(
+        Set<MethodInfo> methods2 = ClassesTool.diffMethodsOfTwoDir(
                 "/Users/canglong/Downloads/coverage/backup/b200",
                 "/Users/canglong/Downloads/coverage/backup/b2");
 
@@ -46,7 +46,7 @@ public class MyTest {
                 "./test/classes/HelloWorld3.class"};
 
         for (String path : filePaths) {
-            Set<MethodInfo> methods = ClassesDiffTool.getFileMethodInfo(new File(path));
+            Set<MethodInfo> methods = ClassesTool.getFileMethodInfo(new File(path));
             for (MethodInfo methodInfo : methods) {
                 System.out.println(methodInfo);
             }

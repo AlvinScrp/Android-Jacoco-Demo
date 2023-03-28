@@ -3,6 +3,7 @@ package com.a.diff;
 import com.a.classes.MethodExtractClassVisitor;
 import com.a.classes.MethodInfo;
 
+import org.jacoco.core.internal.analysis.MethodKey;
 import org.jacoco.core.internal.data.CRC64;
 import org.objectweb.asm.ClassReader;
 
@@ -10,10 +11,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
-public class ClassesDiffTool {
+public class ClassesTool {
 
     public static Set<MethodInfo> diffMethodsOfTwoDir(String newDirPath, String oldDirPath) {
         long time = System.currentTimeMillis();
@@ -25,7 +28,6 @@ public class ClassesDiffTool {
 
         for (String relaPath : newClassPaths) {
             File newFile = new File(newDirPath, relaPath);
-
             if (!oldClassPaths.contains(relaPath)) {
                 //file add
                 Set<MethodInfo> newMethods = getFileMethodInfo(newFile);
@@ -46,6 +48,43 @@ public class ClassesDiffTool {
         double cost = (System.currentTimeMillis() - time) / 1000.0;
         System.out.println(" diff methods of twoDir, methods.size:" + res.size() + " compareCount:" + compareCount + " cost:" + cost + "s");
         return res;
+    }
+
+    public static Map<MethodKey, MethodInfo> loadMethodMapWithFilter(String dirPath, boolean filter, Set<String> filterClassNames) {
+        Set<MethodInfo> set = loadMethodsWithFilter(dirPath, filter, filterClassNames);
+        Map<MethodKey, MethodInfo> map = new HashMap<>();
+        for (MethodInfo m : set) {
+            MethodKey key = new MethodKey(m.className, m.methodName, m.desc);
+            map.put(key, m);
+        }
+        return map;
+    }
+
+    public static Set<MethodInfo> loadMethodsWithFilter(String dirPath, boolean filter, Set<String> filterClassNames) {
+        long time = System.currentTimeMillis();
+        int compareCount = 0;
+        Set<String> classPaths = getAllClassPaths(dirPath);
+        Set<MethodInfo> methods = new HashSet<>();
+        for (String classPath : classPaths) {
+            try {
+                File classFile = new File(classPath);
+                byte[] newFileContent = readFileToByteArray(classFile);
+                ClassReader cr = new ClassReader(newFileContent);
+                String className = cr.getClassName();
+                if (filter && filterClassNames.contains(className)) {
+                    MethodExtractClassVisitor cv = new MethodExtractClassVisitor();
+                    cr.accept(cv, 0);
+                    Set<MethodInfo> set = cv.getMethodSet();
+                    methods.addAll(set);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        String cost = "" + ((System.currentTimeMillis() - time) / 1000.0) + "s";
+        System.out.println("loadMethodsWithFilter, classPaths.size:" + classPaths.size() + " compareCount:" + compareCount + " cost:" + cost);
+
+        return methods;
     }
 
     private static boolean compareFileContent(File file1, File file2) {
@@ -89,6 +128,7 @@ public class ClassesDiffTool {
         return cv.getMethodSet();
 
     }
+
     public static byte[] readFileToByteArray(File classFile) {
         try {
             FileInputStream fis = new FileInputStream(classFile);
@@ -104,7 +144,6 @@ public class ClassesDiffTool {
             e.printStackTrace();
         }
         return null;
-
     }
 
 

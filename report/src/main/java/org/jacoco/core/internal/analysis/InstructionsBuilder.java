@@ -33,6 +33,9 @@ class InstructionsBuilder {
 	/** Probe array of the class the analyzed method belongs to. */
 	private final boolean[] probes;
 
+	private int probeStart = -1;
+	private int probeEnd = -1;
+
 	/** The line which belong to subsequently added instructions. */
 	private int currentLine;
 
@@ -146,6 +149,11 @@ class InstructionsBuilder {
 	 *            unique branch number for the last instruction
 	 */
 	void addProbe(final int probeId, final int branch) {
+		if (probeStart < 0) {
+			probeStart = probeId;
+		}else {
+			probeEnd = probeId;
+		}
 		final boolean executed = probes != null && probes[probeId];
 		currentInsn.addBranch(executed, branch);
 	}
@@ -164,6 +172,18 @@ class InstructionsBuilder {
 		}
 
 		return instructions;
+	}
+
+	public boolean[] getProbes() {
+		return probes;
+	}
+
+	public int getProbeStart() {
+		return probeStart;
+	}
+
+	public int getProbeEnd() {
+		return probeEnd;
 	}
 
 	private static class Jump {

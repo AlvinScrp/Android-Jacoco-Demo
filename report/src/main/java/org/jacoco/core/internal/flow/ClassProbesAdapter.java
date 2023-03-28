@@ -12,7 +12,7 @@
  *******************************************************************************/
 package org.jacoco.core.internal.flow;
 
-import com.a.report.ReportConfigManager;
+import com.a.report.ReportMethodManager;
 
 import org.jacoco.core.internal.instr.InstrSupport;
 import org.objectweb.asm.ClassVisitor;
@@ -66,7 +66,7 @@ public class ClassProbesAdapter extends ClassVisitor
         final MethodProbesVisitor mv = cv.visitMethod(access, name, desc,
                 signature, exceptions);
 
-        Boolean isMatched = ReportConfigManager.getInstance().isMatched(this.name, name, desc);
+        Boolean isMatched = ReportMethodManager.getInstance().isMatched(this.name, name, desc);
         methodProbes = mv != null && isMatched ? mv : EMPTY_METHOD_PROBES_VISITOR;
 
         return new MethodSanitizer(null, access, name, desc, signature,

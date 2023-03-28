@@ -14,6 +14,8 @@ package org.jacoco.core.internal.analysis;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.jacoco.core.analysis.IClassCoverage;
 import org.jacoco.core.analysis.IMethodCoverage;
@@ -31,6 +33,7 @@ public class ClassCoverageImpl extends SourceNodeImpl
     private String superName;
     private String[] interfaces;
     private String sourceFileName;
+    private final Map<MethodKey, MethodProbePosition> methodProbeMap;
 
     /**
      * Creates a class coverage data object with the given parameters.
@@ -46,6 +49,7 @@ public class ClassCoverageImpl extends SourceNodeImpl
         this.id = id;
         this.noMatch = noMatch;
         this.methods = new ArrayList<IMethodCoverage>();
+        this.methodProbeMap = new HashMap<>();
     }
 
     /**
@@ -136,4 +140,13 @@ public class ClassCoverageImpl extends SourceNodeImpl
         return methods;
     }
 
+    public Map<MethodKey, MethodProbePosition> getMethodProbeMap() {
+        return methodProbeMap;
+    }
+
+    public void addMethodProbeInfo(String methodName, String methodDesc, boolean[] probes, int probeStart, int probeEnd) {
+        MethodKey key = new MethodKey(getName(), methodName, methodDesc);
+        MethodProbePosition pos = new MethodProbePosition(probes, probeStart, probeEnd);
+        methodProbeMap.put(key, pos);
+    }
 }
