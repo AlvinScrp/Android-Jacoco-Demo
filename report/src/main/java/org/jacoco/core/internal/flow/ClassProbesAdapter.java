@@ -62,16 +62,10 @@ public class ClassProbesAdapter extends ClassVisitor
     public final MethodVisitor visitMethod(final int access, final String name,
                                            final String desc, final String signature,
                                            final String[] exceptions) {
-//        System.out.println("className:" + this.name + " methodName：" + name + " desc:" + desc + " signature:" + signature);
         final MethodProbesVisitor methodProbes;
         final MethodProbesVisitor mv = cv.visitMethod(access, name, desc,
                 signature, exceptions);
 
-//        Boolean needFlag1 = this.name.equals("com/a/jacocotest/MainActivity") &&
-//                (name.equals("updateText") || name.equals("onCreate$lambda$0") || name.equals("onCreate$lambda$1"));
-//        Boolean needFlag2 = this.name.equals("com/a/jacocotest/JacocoHelper") &&
-//                name.equals("generateCoverageFile");
-//        Boolean needFlag = needFlag1 || needFlag2;
         Boolean isMatched = ReportConfigManager.getInstance().isMatched(this.name, name, desc);
         methodProbes = mv != null && isMatched ? mv : EMPTY_METHOD_PROBES_VISITOR;
 

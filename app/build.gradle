@@ -15,7 +15,7 @@ cocoInstrument {
     includes = ["com.a.*"]
 }
 
-// ./gradlew dailyDebugCocoBackup  --toDir==/Users/canglong/Documents/github_project/Android-Jacoco-Demo-builds  --buildNum=100
+// ./gradlew dailyDebugCocoBackup  --toDir=/Users/canglong/Documents/github_project/Android-Jacoco-Demo-Backups  --buildNum=100
 apply plugin: CocoBackupPlugin
 cocoBackup {
     excludeModules = ["plugin", "report", "rt-no-op"]

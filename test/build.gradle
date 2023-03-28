@@ -1,0 +1,15 @@
+plugins {
+    id 'java-library'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+def asm_version='9.1'
+dependencies {
+    api project(":report")
+    implementation("org.ow2.asm:asm:${asm_version}")
+    implementation("org.ow2.asm:asm-commons:${asm_version}")
+    implementation("org.ow2.asm:asm-tree:${asm_version}")
+}

@@ -19,16 +19,6 @@ public class MethodModifies {
     public static String c(boolean onlyOne){
 
         Log.d("alvin","run c 1");
-        try{
-            int a= 10;
-            a+=20;
-            a/=0;
-            a+=30;
-
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-
         if(!onlyOne){
             Log.d("alvin","run c 2");
         }

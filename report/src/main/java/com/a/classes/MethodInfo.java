@@ -1,12 +1,12 @@
-package com.a.jgit.diff.classfiles;
+package com.a.classes;
 
 import java.util.Arrays;
 import java.util.Objects;
 
-public class ClassMethodInfo {
-    public String className;
+public class MethodInfo {
+    public String className; // com/a/test/HelloWorld
     public String methodName;
-    public String desc;
+    public String desc; // (Ljava/lang/String;)V
     public String signature;
     public String[] exceptions;
     public String md5;
@@ -22,7 +22,7 @@ public class ClassMethodInfo {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ClassMethodInfo that = (ClassMethodInfo) o;
+        MethodInfo that = (MethodInfo) o;
         return Objects.equals(className, that.className) && Objects.equals(methodName, that.methodName) && Objects.equals(desc, that.desc) && Objects.equals(signature, that.signature) && Arrays.equals(exceptions, that.exceptions) && Objects.equals(md5, that.md5);
     }
 

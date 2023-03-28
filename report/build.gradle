@@ -25,15 +25,15 @@ java {
 
 
 dependencies {
-    implementation "org.eclipse.jgit:org.eclipse.jgit:6.3.0.202209071007-r"
-    implementation "org.eclipse.jdt:org.eclipse.jdt.core:3.19.0"
-    implementation 'org.slf4j:slf4j-simple:1.7.36'
+//    implementation "org.eclipse.jgit:org.eclipse.jgit:6.3.0.202209071007-r"
+//    implementation "org.eclipse.jdt:org.eclipse.jdt.core:3.19.0"
+//    implementation 'org.slf4j:slf4j-simple:1.7.36'
 
     implementation("org.ow2.asm:asm:${asm_version}")
     implementation("org.ow2.asm:asm-commons:${asm_version}")
     implementation("org.ow2.asm:asm-tree:${asm_version}")
 }
-version '0.0.1-alpha5'
+version '0.0.2-alpha01'
 println(version)
 
 jar {

@@ -10,20 +10,8 @@
  *    Brock Janiczak - initial API and implementation
  *
  *******************************************************************************/
-package com.a.report;
+package com.a.test;
 
-import com.a.jgit.diff.ClassesDiff;
-import com.a.jgit.diff.classfiles.ClassMethodInfo;
-import com.a.util.Utils;
-
-import org.eclipse.jgit.api.CreateBranchCommand;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.PullCommand;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.lib.Ref;
-import org.eclipse.jgit.transport.CredentialsProvider;
-import org.eclipse.jgit.transport.NetRCCredentialsProvider;
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.jacoco.core.analysis.Analyzer;
 import org.jacoco.core.analysis.CoverageBuilder;
 import org.jacoco.core.analysis.IBundleCoverage;
@@ -35,14 +23,10 @@ import org.jacoco.report.MultiSourceFileLocator;
 import org.jacoco.report.html.HTMLFormatter;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 /**
  * This example creates a HTML report for eclipse like projects based on a
@@ -180,15 +164,16 @@ public class ReportGeneratorTest2 {
         String projectDir = "/Users/canglong/Documents/github_project/Android-Jacoco-Demo";
 
         List<String> ecFilePaths =new ArrayList<>();
-        ecFilePaths.add( projectDir+"/build/ec/aa1.ec");
+        ecFilePaths.add( projectDir+"/build/ec/aa.ec");
 
-        String sourceDir = projectDir + "/app/src/main/java";
+        String sourceDir = projectDir + "/mergereport/src/main/java";
 
         List<String> classDirs = new ArrayList<>();
-        classDirs.add( projectDir + "/app/build/intermediates/javac/dailyDebug");
-        classDirs.add( projectDir + "/app/build/tmp/kotlin-classes/dailyDebug");
+//        classDirs.add( projectDir + "/mergereport/build/intermediates/javac/dailyDebug");
+//        classDirs.add( projectDir + "/mergereport/build/tmp/kotlin-classes/dailyDebug");
+        classDirs.add( projectDir + "/mergereport/build/intermediates/javac/dailyDebug/classes/com/a/jacocotest/MethodModifies.class");
 
-        String reportDir = projectDir + "/build/reportX/";
+        String reportDir = projectDir + "/build/reportY/";
 
         ReportGeneratorTest2 generator = new ReportGeneratorTest2(ecFilePaths, sourceDir, classDirs, reportDir);
         generator.create();

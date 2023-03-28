@@ -12,7 +12,7 @@ import java.io.File
 abstract class CocoBackupTask : DefaultTask() {
 
 
-    // ./gradlew dailyDebugCocoBackup  --toDir=~/xx/fxj --buildNum=100
+    // ./gradlew dailyDebugCocoBackup  --toDir=~/backup/fxj --buildNum=100
     @Option(option = "toDir", description = "build backup dir")
     @Internal
     var toDir: String = "";
@@ -25,167 +25,42 @@ abstract class CocoBackupTask : DefaultTask() {
     @TaskAction
     fun taskAction() {
         try {
-
             println("**** start CocoBackupTask ****")
-            println("toDir:${toDir}")
             val variantName: String = name.removeSuffix(CocoBackUpConst.TaskSuffix)
-            println("variantName:${variantName}")
-            // copy dirs to temp
+            println("toDir:${toDir} ,buildNum:${buildNum} variantName:${variantName}")
+
             val tempDir = File(project.buildDir, "cocoBackupTemp")
+            val backupDir = File(toDir, "b${buildNum}")
+            println("-------> clear and copy to ${backupDir.absolutePath} , from ${tempDir.absolutePath}    ")
+
             ensureCleanDir(tempDir)
-
-            val extension: CocoBackupExtension? =
-                project.extensions.getByType(CocoBackupExtension::class.java)
-            val excludeModules = mutableSetOf<String>().apply {
-                addAll(extension?.excludeModules ?: emptyArray())
-            }
-
-            // copy dirs to temp
-            val moduleProjects = project.rootProject.subprojects
-            moduleProjects.forEach {
-                if (!excludeModules.contains(it.name)) {
-                    copyModuleProjectToDir(it, variantName, tempDir)
-                }
-            }
-
-
-            if (buildNum.isNullOrEmpty()) {
-                throw  IllegalArgumentException("buildNum:${buildNum} 异常")
-            }
-            if (toDir.isNullOrEmpty()) {
-                throw  IllegalArgumentException("toDir:${toDir} 异常")
-            }
-
-            val backupDir = File(toDir)
-            val branchName = "b${buildNum}"
-            // git create banch
-            gitCreateBranch(branchName, backupDir)
-
-            //clear backupDir and copy temp to builds dir
-            println("-------> clear ${backupDir.absolutePath} , and copy from ${tempDir.absolutePath}    ")
+            copyAllModuleProjectsToDir(variantName, tempDir)
+            ensureCleanDir(backupDir)
             FileUtils.copyDirectory(tempDir, backupDir)
-
-            //git commit  git push
-            println("-------> git commit and push to $branchName")
-            gitCommit(branchName, backupDir)
-
-            //delete temp
-//            ensureCleanDir(tempDir)
-
         } catch (e: Exception) {
             e.printStackTrace()
             println("back up Exception ${e.message}")
         } finally {
 
         }
-
         println("**** end CocoBackupTask ****")
-
-
     }
 
-    private fun gitCreateBranch(branchName: String, backupDir: File) {
-
-        println("-------> git pull")
-        try{
-            ExecCmd.execute(
-                project, "git",
-                listOf("pull"),
-                backupDir
-            )
-        }catch (e:Exception){
-            e.printStackTrace()
+    private fun copyAllModuleProjectsToDir(variantName: String, tempDir: File) {
+        val extension: CocoBackupExtension? =
+            project.extensions.getByType(CocoBackupExtension::class.java)
+        val excludeModules = mutableSetOf<String>().apply {
+            addAll(extension?.excludeModules ?: emptyArray())
         }
 
-        val byteArrayOutputStream = ByteArrayOutputStream(1024)
-        ExecCmd.execute(
-            project, "git",
-            listOf("branch", "-r"),
-            backupDir,
-            byteArrayOutputStream
-        )
-        val out = String(byteArrayOutputStream.toByteArray(), Charsets.UTF_8)
-        var mainBranch = listOf("master", "main").firstOrNull { out.contains("origin/$it") }
-        if (mainBranch.isNullOrEmpty()) {
-            throw IllegalArgumentException("远程主分支不存在")
+        // copy dirs to temp
+        val moduleProjects = project.rootProject.subprojects
+        moduleProjects.forEach {
+            if (!excludeModules.contains(it.name)) {
+                copyModuleProjectToDir(it, variantName, tempDir)
+            }
         }
-        println("mainBranch:${mainBranch}")
-
-        ExecCmd.execute(
-            project, "git",
-            listOf("checkout", "$mainBranch"),
-            backupDir
-        )
-
-//        println("-------> git checkout -b $branchName origin/master")
-        println("-------> git branch $branchName ")
-        ExecCmd.execute(
-            project, "git",
-            listOf("checkout", "-b", "$branchName"),
-            backupDir
-        )
-
-        println("-------> git push origin $branchName")
-        ExecCmd.execute(
-            project, "git",
-            listOf("push", "origin", "$branchName"),
-            backupDir
-        )
-
-        ExecCmd.execute(
-            project, "git",
-            listOf("push", "--set-upstream", "origin", "$branchName"),
-            backupDir
-        )
     }
-
-    private fun gitCommit(branchName: String, backupDir: File) {
-
-        println("-------> git add .")
-        ExecCmd.execute(
-            project, "git",
-            listOf("add", "."),
-            backupDir
-        )
-
-        val byteArrayOutputStream = ByteArrayOutputStream(1024)
-        val out = String(byteArrayOutputStream.toByteArray(), Charsets.UTF_8)
-        println("-------> git commit -m")
-        ExecCmd.execute(
-            project, "git",
-            listOf("commit", "-m", "'commit:${branchName}'"),
-            backupDir,
-            byteArrayOutputStream
-        )
-
-
-        println("-------> git push")
-        ExecCmd.execute(
-            project, "git",
-            listOf("push", "--set-upstream", "origin", "$branchName"),
-            backupDir
-        )
-
-
-//        project.exec { spec ->
-//            spec.executable = "git"
-//            spec.args = listOf("add .")
-//            spec.workingDir = backupDir
-//        }
-//
-//        project.exec { spec ->
-//            spec.executable = "git"
-//            spec.args = listOf("commit -m 'commit:${branchName}'")
-//            spec.workingDir = backupDir
-//        }
-//
-//        project.exec { spec ->
-//            spec.executable = "git"
-//            spec.args = listOf("push origin $branchName")
-//            spec.workingDir = backupDir
-//        }
-    }
-
 
     private fun copyModuleProjectToDir(p: Project, variantName: String, destDir: File) {
         try {

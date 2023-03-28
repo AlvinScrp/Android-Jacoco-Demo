@@ -12,18 +12,9 @@
  *******************************************************************************/
 package com.a.report;
 
-import com.a.jgit.diff.ClassesDiff;
-import com.a.jgit.diff.classfiles.ClassMethodInfo;
-import com.a.util.Utils;
+import com.a.classes.MethodInfo;
+import com.a.diff.ClassesDiffTool;
 
-import org.eclipse.jgit.api.CreateBranchCommand;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.PullCommand;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.lib.Ref;
-import org.eclipse.jgit.transport.CredentialsProvider;
-import org.eclipse.jgit.transport.NetRCCredentialsProvider;
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.jacoco.core.analysis.Analyzer;
 import org.jacoco.core.analysis.CoverageBuilder;
 import org.jacoco.core.analysis.IBundleCoverage;
@@ -199,16 +190,18 @@ public class ReportGenerator {
         generate(p);
     }
 
-    private static final String BRANCH_PREFIX = "b";
+    private static final String BUILD_PREFIX = "b";
 
     public static void generate(ReportGeneratorParams p) throws Exception {
 
-        prepareBackupDir(p);
+//        prepareBackupDir(p);
         analysisAndSaveTwoBuildDiff(p);
 
         List<String> realEcFilePaths = preHandleEcFilePaths(p.getEcFiles());
-        String sourceDir = p.getBackupDir() + "/src/main/java";
-        String classDir = p.getBackupDir() + "/build";
+        String buildNum = p.getBuildNum();
+        String buildBackDir = p.getBackupDir() + "/b" + buildNum;
+        String sourceDir = buildBackDir + "/src/main/java";
+        String classDir = buildBackDir + "/build";
         String reportDir = p.getReportOutDir();
 
         ReportGenerator generator = new ReportGenerator(realEcFilePaths, sourceDir, classDir, reportDir);
@@ -216,45 +209,15 @@ public class ReportGenerator {
         saveGenerateInfo(realEcFilePaths, reportDir);
     }
 
-    private static void prepareBackupDir(ReportGeneratorParams p) throws IOException, GitAPIException {
-        String branch = BRANCH_PREFIX + p.getBuildNum();
-        Git git = Git.open(new File(p.getBackupDir()));
-        PullCommand pullCommand = git.pull();
-        String gitUsername = p.getGitUsername();
-        String gitPwd = p.getGitPwd();
-        if (!Utils.isNullOrEmpty(gitUsername) && !Utils.isNullOrEmpty(gitPwd)) {
-            CredentialsProvider cp = new UsernamePasswordCredentialsProvider(gitUsername, gitPwd);
-            pullCommand.setCredentialsProvider(cp);
-        } else {
-            pullCommand.setCredentialsProvider(new NetRCCredentialsProvider());
-        }
-        pullCommand.call();
-        List<Ref> refs = git.branchList().call();
-        boolean findRef = false;
-        for (Ref ref : refs) {
-            if (ref.getName().equals("refs/heads/" + branch)) {
-                findRef = true;
-                break;
-            }
-        }
-        if (findRef) {
-            git.checkout().setName(branch).call();
-        } else {
-            git.checkout().setCreateBranch(true).setName(branch)
-                    .setUpstreamMode(CreateBranchCommand.SetupUpstreamMode.SET_UPSTREAM)
-                    .setStartPoint("origin/" + branch).call();
-        }
-
-    }
-
     private static void analysisAndSaveTwoBuildDiff(ReportGeneratorParams p) {
-        String branch = BRANCH_PREFIX + p.getBuildNum();
+
         String relativeBuildNum = p.getRelativeBuildNum();
-        System.out.println("branch:" + branch);
+
         if (relativeBuildNum != null && relativeBuildNum.length() > 0) {
-            String relativeBranch = BRANCH_PREFIX + p.getRelativeBuildNum();
-            System.out.println("relativeBranch:" + relativeBranch);
-            Set<ClassMethodInfo> methods = ClassesDiff.diffMethodsTwoBranch(p.getBackupDir(), branch, relativeBranch);
+            String newDirPath = p.getBackupDir() + "/" + BUILD_PREFIX + p.getBuildNum();
+            String oldDirPath = p.getBackupDir() + "/" + BUILD_PREFIX + relativeBuildNum;
+            System.out.println("analysisAndSaveTwoBuildDiff,----------  \n * newDir:" + newDirPath + " \n * oldDir:" + oldDirPath);
+            Set<MethodInfo> methods = ClassesDiffTool.diffMethodsOfTwoDir(newDirPath, oldDirPath);
             ReportConfigManager.getInstance().setDiff(methods);
             ReportConfigManager.getInstance().setIncremental(true);
         } else {

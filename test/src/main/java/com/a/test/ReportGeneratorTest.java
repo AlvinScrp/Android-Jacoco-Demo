@@ -1,4 +1,7 @@
-package com.a.report;
+package com.a.test;
+
+import com.a.report.ReportGenerator;
+import com.a.report.ReportGeneratorParams;
 
 public class ReportGeneratorTest {
     public static void main(String[] args) throws Exception {

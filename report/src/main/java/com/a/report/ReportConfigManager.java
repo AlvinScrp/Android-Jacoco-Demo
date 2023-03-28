@@ -1,6 +1,6 @@
 package com.a.report;
 
-import com.a.jgit.diff.classfiles.ClassMethodInfo;
+import com.a.classes.MethodInfo;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -11,7 +11,7 @@ public class ReportConfigManager {
     private static ReportConfigManager _instance = new ReportConfigManager();
 
 
-    private Set<ClassMethodInfo> diffMethods = new HashSet<>();
+    private Set<MethodInfo> diffMethods = new HashSet<>();
     private Set<String> diffClassNames = new HashSet<>();
     private Set<String> diffMethodKeys = new HashSet<>();
     private boolean incremental = false;
@@ -28,13 +28,13 @@ public class ReportConfigManager {
         return _instance;
     }
 
-    public void setDiff(Set<ClassMethodInfo> methods) {
+    public void setDiff(Set<MethodInfo> methods) {
         this.diffMethods.clear();
         this.diffClassNames.clear();
         this.diffMethodKeys.clear();
         if (methods != null && !methods.isEmpty()) {
             this.diffMethods.addAll(methods);
-            for (ClassMethodInfo method : methods) {
+            for (MethodInfo method : methods) {
                 diffClassNames.add(method.className);
                 String methodKey = toMethodKey(method.className, method.methodName, method.desc);
                 diffMethodKeys.add(methodKey);

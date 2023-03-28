@@ -1,7 +1,8 @@
-package com.a.jgit.diff.classfiles;
+package com.a.classes;
+
+import com.a.classes.utils.Util;
 
 import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.Attribute;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Handle;
@@ -13,25 +14,23 @@ import org.objectweb.asm.TypePath;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.a.jgit.Utils;
-
 /**
  * <li>Package:com.ttp.gnirts_plugin</li>
  * <li>Author: Administrator  </li>
  * <li>Date: 2020/9/15</li>
  * <li>Description:   </li>
  */
-public class DiffClassVisitor extends ClassVisitor {
+public class MethodExtractClassVisitor extends ClassVisitor {
     private String className;
 
-    Set<ClassMethodInfo> methodInfos = new HashSet<>();
+    Set<MethodInfo> methodSet = new HashSet<>();
 
-    public DiffClassVisitor() {
+    public MethodExtractClassVisitor() {
         super(Opcodes.ASM9);
     }
 
-    public Set<ClassMethodInfo> getMethodInfos() {
-        return methodInfos;
+    public Set<MethodInfo> getMethodSet() {
+        return methodSet;
     }
 
     @Override
@@ -58,7 +57,7 @@ public class DiffClassVisitor extends ClassVisitor {
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
 //        System.out.println("className:" + className + "  methodName:" + name + "  desc:" + desc + "  signature:" + signature);
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-        final ClassMethodInfo methodInfo = new ClassMethodInfo();
+        final MethodInfo methodInfo = new MethodInfo();
         methodInfo.className = className;
         methodInfo.methodName = name;
         methodInfo.desc = desc;
@@ -86,11 +85,17 @@ public class DiffClassVisitor extends ClassVisitor {
 
             @Override
             public AnnotationVisitor visitTypeAnnotation(int typeRef, TypePath typePath, String desc, boolean visible) {
+
                 builder.append(typeRef);
-                builder.append(typePath.toString());
+                try {
+                    builder.append(typePath.toString());
+                } catch (Exception e) {
+                    (new  IllegalStateException(className+":"+name+":"+desc)).printStackTrace();
+                }
                 builder.append(desc);
                 builder.append(visible);
 //                System.out.println("visitTypeAnnotation--typeRef:" + typeRef + "  TypePath:" + typePath.toString() + "  desc:" + desc + "  visible" + visible);
+
                 return super.visitTypeAnnotation(typeRef, typePath, desc, visible);
             }
 
@@ -180,7 +185,11 @@ public class DiffClassVisitor extends ClassVisitor {
             public void visitInvokeDynamicInsn(String name, String desc, Handle bsm, Object... bsmArgs) {
                 builder.append(name);
                 builder.append(desc);
-                builder.append(bsm.toString());
+                try {
+                    builder.append(bsm.toString());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 super.visitInvokeDynamicInsn(name, desc, bsm, bsmArgs);
             }
 
@@ -198,8 +207,13 @@ public class DiffClassVisitor extends ClassVisitor {
             public void visitLdcInsn(Object cst) {
 //                System.out.println("visitLdcInsn--cst:" + cst.toString() + " " + cst.getClass());
                 //资源id 每次编译都会变，所以不参与 0x7f010008
-                if (!(cst instanceof Integer) || !isResourceId((Integer)cst)) {
-                    builder.append(cst.toString());
+                if (!(cst instanceof Integer) || !isResourceId((Integer) cst)) {
+                    try {
+                        builder.append(cst.toString());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
                 }
                 super.visitLdcInsn(cst);
             }
@@ -228,7 +242,7 @@ public class DiffClassVisitor extends ClassVisitor {
             public void visitLookupSwitchInsn(Label dflt, int[] keys, Label[] labels) {
                 if (keys != null && keys.length > 0) {
                     for (int key : keys) {
-                        if(!isResourceId(key)){
+                        if (!isResourceId(key)) {
                             builder.append(key);
                         }
                     }
@@ -250,7 +264,11 @@ public class DiffClassVisitor extends ClassVisitor {
             @Override
             public AnnotationVisitor visitInsnAnnotation(int typeRef, TypePath typePath, String desc, boolean visible) {
                 builder.append(typeRef);
-                builder.append(typePath.toString());
+                try {
+                    builder.append(typePath.toString());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 builder.append(desc);
                 builder.append(visible);
                 return super.visitInsnAnnotation(typeRef, typePath, desc, visible);
@@ -268,8 +286,13 @@ public class DiffClassVisitor extends ClassVisitor {
             //与方法体有关，需要参与md5
             @Override
             public AnnotationVisitor visitTryCatchAnnotation(int typeRef, TypePath typePath, String desc, boolean visible) {
+
                 builder.append(typeRef);
-                builder.append(typePath.toString());
+                try {
+                    builder.append(typePath.toString());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 builder.append(desc);
                 builder.append(visible);
                 return super.visitTryCatchAnnotation(typeRef, typePath, desc, visible);
@@ -291,7 +314,11 @@ public class DiffClassVisitor extends ClassVisitor {
             @Override
             public AnnotationVisitor visitLocalVariableAnnotation(int typeRef, TypePath typePath, Label[] start, Label[] end, int[] index, String desc, boolean visible) {
                 builder.append(typeRef);
-                builder.append(typePath.toString());
+                try {
+                    builder.append(typePath.toString());
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
                 if (index != null && index.length > 0) {
                     for (int i : index) {
                         builder.append(i);
@@ -321,9 +348,9 @@ public class DiffClassVisitor extends ClassVisitor {
             //方法访问结束
             @Override
             public void visitEnd() {
-                String  md5 = Utils.MD5Encode(builder.toString());
+                String md5 = Util.md5Encode(builder.toString());
                 methodInfo.md5 = md5;
-                methodInfos.add(methodInfo);
+                methodSet.add(methodInfo);
 //                System.out.println("visitEnd>>>md5:" + md5);
                 super.visitEnd();
             }
@@ -332,7 +359,7 @@ public class DiffClassVisitor extends ClassVisitor {
     }
 
     private boolean isResourceId(Integer id) {
-        String hex=String.format("0x%8s",Integer.toHexString(id)).replace(' ','0');
+        String hex = String.format("0x%8s", Integer.toHexString(id)).replace(' ', '0');
         return hex.startsWith("0x7f");//0x7f 一定为id，不参与diff
     }
 
