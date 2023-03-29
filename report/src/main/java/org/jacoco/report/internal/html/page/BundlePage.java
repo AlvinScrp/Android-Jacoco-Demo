@@ -28,75 +28,76 @@ import org.jacoco.report.internal.html.IHTMLReportContext;
  */
 public class BundlePage extends TablePage<ICoverageNode> {
 
-	private final ISourceFileLocator locator;
+    private final ISourceFileLocator locator;
 
-	private IBundleCoverage bundle;
+    private IBundleCoverage bundle;
 
-	/**
-	 * Creates a new visitor in the given context.
-	 *
-	 * @param bundle
-	 *            coverage date for the bundle
-	 * @param parent
-	 *            optional hierarchical parent
-	 * @param locator
-	 *            source locator
-	 * @param folder
-	 *            base folder for this bundle
-	 * @param context
-	 *            settings context
-	 */
-	public BundlePage(final IBundleCoverage bundle, final ReportPage parent,
-			final ISourceFileLocator locator, final ReportOutputFolder folder,
-			final IHTMLReportContext context) {
-		super(bundle.getPlainCopy(), parent, folder, context);
-		this.bundle = bundle;
-		this.locator = locator;
-	}
+    /**
+     * Creates a new visitor in the given context.
+     *
+     * @param bundle  coverage date for the bundle
+     * @param parent  optional hierarchical parent
+     * @param locator source locator
+     * @param folder  base folder for this bundle
+     * @param context settings context
+     */
+    public BundlePage(final IBundleCoverage bundle, final ReportPage parent,
+                      final ISourceFileLocator locator, final ReportOutputFolder folder,
+                      final IHTMLReportContext context) {
+        super(bundle.getPlainCopy(), parent, folder, context);
+        this.bundle = bundle;
+        this.locator = locator;
+    }
 
-	@Override
-	public void render() throws IOException {
-		renderPackages();
-		super.render();
-		// Don't keep the bundle structure in memory
-		bundle = null;
-	}
+    @Override
+    public void render() throws IOException {
+        renderPackages();
+        super.render();
+        // Don't keep the bundle structure in memory
+        bundle = null;
+    }
 
-	private void renderPackages() throws IOException {
-		for (final IPackageCoverage p : bundle.getPackages()) {
-			if (!p.containsCode()) {
-				continue;
-			}
-			final String packagename = p.getName();
-			final String foldername = packagename.length() == 0 ? "default"
-					: packagename.replace('/', '.');
-			final PackagePage page = new PackagePage(p, this, locator,
-					folder.subFolder(foldername), context);
-			page.render();
-			addItem(page);
-		}
-	}
+    private void renderPackages() throws IOException {
+        for (final IPackageCoverage p : bundle.getPackages()) {
+            if (!p.containsCode()) {
+                continue;
+            }
+            final String packagename = p.getName();
+            final String foldername = packagename.length() == 0 ? "default"
+                    : packagename.replace('/', '.');
+            final PackagePage page = new PackagePage(p, this, locator,
+                    folder.subFolder(foldername), context);
 
-	@Override
-	protected String getOnload() {
-		return "initialSort(['breadcrumb', 'coveragetable'])";
-	}
+            page.render();
+            //start--> new code for show source file first
+            PackageSourcePage sourcePage = page.getPackageSourcePage();
+            addItem(sourcePage != null ? sourcePage : page);
+//			addItem(page);
+            //-->end
 
-	@Override
-	protected String getFileName() {
-		return "index.html";
-	}
+        }
+    }
 
-	@Override
-	protected void content(HTMLElement body) throws IOException {
-		if (bundle.getPackages().isEmpty()) {
-			body.p().text("No class files specified.");
-		} else if (!bundle.containsCode()) {
-			body.p().text(
-					"None of the analyzed classes contain code relevant for code coverage.");
-		} else {
-			super.content(body);
-		}
-	}
+    @Override
+    protected String getOnload() {
+        return "initialSort(['breadcrumb', 'coveragetable'])";
+    }
+
+    @Override
+    protected String getFileName() {
+        return "index.html";
+    }
+
+    @Override
+    protected void content(HTMLElement body) throws IOException {
+        if (bundle.getPackages().isEmpty()) {
+            body.p().text("No class files specified.");
+        } else if (!bundle.containsCode()) {
+            body.p().text(
+                    "None of the analyzed classes contain code relevant for code coverage.");
+        } else {
+            super.content(body);
+        }
+    }
 
 }

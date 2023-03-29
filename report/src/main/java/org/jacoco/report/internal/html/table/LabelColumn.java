@@ -41,7 +41,7 @@ public class LabelColumn implements IColumnRenderer {
 	public void footer(final HTMLElement td, final ICoverageNode total,
 			final Resources resources, final ReportOutputFolder base)
 			throws IOException {
-		td.text("Total");
+		td.text("Total Covered");
 	}
 
 	public void item(final HTMLElement td, final ITableItem item,

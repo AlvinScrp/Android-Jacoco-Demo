@@ -102,4 +102,10 @@ public class PackagePage extends TablePage<IPackageCoverage> {
 		super.infoLinks(span);
 	}
 
+	public PackageSourcePage getPackageSourcePage() {
+		if(sourceCoverageExists) {
+			return packageSourcePage;
+		}
+		return null;
+	}
 }
