@@ -25,5 +25,7 @@ rt：
 
 版本更新说明
 0.0.1 基础版本
-0.0.2 backup和report 去掉git操作
+0.0.2 
+    backup和report 去掉git操作
+    支持不同build的运行日志，合并生成报告
 
