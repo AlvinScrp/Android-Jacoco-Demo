@@ -6,13 +6,33 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ExecFileUtil {
 
+    public static Map<String, List<String>> extractExecFilePathMap(String ecFilesText) {
+        List<String> realPaths = extractExecFilePaths(ecFilesText);
+        Map<String, List<String>> map = new HashMap<>();
+        try {
+            for (String realPath : realPaths) {
+                String build = extractBuildNum(realPath);
+                if (build != null && build.length() > 0) {
+                    if (map.get(build) == null) {
+                        map.put(build, new ArrayList<>());
+                    }
+                    map.get(build).add(realPath);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return map;
+    }
+
     public static List<String> extractExecFilePaths(String ecFilesText) {
         List<String> realPaths = new ArrayList<>();
-//        Map<String, List<String>> map = new HashMap<>();
         try {
             String[] ecPathArray = ecFilesText.split(",");
             for (String path : ecPathArray) {
@@ -21,15 +41,7 @@ public class ExecFileUtil {
                     addExecFilesToList(file, realPaths);
                 }
             }
-//            for (String realPath : realPaths) {
-//                String build = extractBuildNum(realPath);
-//                if (build != null && build.length() > 0) {
-//                    if (map.get(build) == null) {
-//                        map.put(build, new ArrayList<>());
-//                    }
-//                    map.get(build).add(realPath);
-//                }
-//            }
+
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -65,10 +77,10 @@ public class ExecFileUtil {
         }
     }
 
-    public static void saveGenerateInfo(List<String> paths, String reportDir) {
+    public static void saveGenerateInfo(Map<String, InputInfo> map, String reportDir) {
         OutputStream out = null;
         try {
-            if (paths == null || paths.isEmpty()) {
+            if (map == null || map.isEmpty()) {
                 return;
             }
             File dir = new File(reportDir);
@@ -80,9 +92,13 @@ public class ExecFileUtil {
                 file.createNewFile();
             }
             StringBuilder sb = new StringBuilder();
-            for (String path : paths) {
-                sb.append("," + path);
+            for (InputInfo input : map.values()) {
+                List<String> paths = input.getExecFilePaths();
+                for (String path : paths) {
+                    sb.append( path+"\n");
+                }
             }
+
 
             String text = sb.substring(1);
             out = new FileOutputStream(file);

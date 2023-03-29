@@ -56,36 +56,20 @@ public class ReportGenerator {
 
     private final String title;
 
-    private List<String> execPaths;
-    /**
-     * 路径必须精确到xxx/src/main/java,即包名的上一级
-     */
-    private final String targetSourceDir;
-    /**
-     * 路径不用精确，内部会递推穷举
-     */
-    private final String targetClassesDir;
+    Map<String, InputInfo> inputMap;
     private final String reportDir;
-
-//    private ExecFileLoader execFileLoader;
-
-    private String targetBuild;
+    private InputInfo targetInput;
     private ExecFileLoader targetExecLoader = new ExecFileLoader();
     private Map<String, ExecFileLoader> otherExecLoaderMap = new ConcurrentHashMap<>();
-
-    private GeneratorInfoProvider infoProvider;
 
     /**
      * Create a new generator based for the given project.
      */
-    public ReportGenerator(String targetBuild, List<String> execPaths, String reportDir, GeneratorInfoProvider infoProvider) {
+    public ReportGenerator(String targetBuild, Map<String, InputInfo> inputMap, String reportDir) {
         this.title = "CodeCoverageReport";
-        this.targetBuild = targetBuild;
-        this.execPaths = new ArrayList<>(execPaths);
-        this.targetSourceDir = infoProvider.srcDir(targetBuild);
-        this.targetClassesDir = infoProvider.classDir(targetBuild);
+        this.targetInput = inputMap.get(targetBuild);
+        this.inputMap = new HashMap<>(inputMap);
         this.reportDir = reportDir;
-        this.infoProvider = infoProvider;
     }
 
     /**
@@ -98,7 +82,7 @@ public class ReportGenerator {
         try {
             loadExecutionData();
             mergeExecutionData();
-            IBundleCoverage bundleCoverage = analyzeStructure(targetExecLoader, targetClassesDir, title);
+            IBundleCoverage bundleCoverage = analyzeStructure(targetExecLoader, targetInput.getClassDir(), title);
             createReport(bundleCoverage);
         } catch (Exception e) {//不中断流程
             e.printStackTrace();
@@ -126,7 +110,7 @@ public class ReportGenerator {
         // Populate the report structure with the bundle coverage information.
         // Call visitGroup if you need groups in your report.
         MultiSourceFileLocator sourceFileLocator = new MultiSourceFileLocator(4);
-        sourceFileLocator.add(new DirectorySourceFileLocator(new File(targetSourceDir), "utf-8", 4));
+        sourceFileLocator.add(new DirectorySourceFileLocator(new File(targetInput.getSrcDir()), "utf-8", 4));
         visitor.visitBundle(bundleCoverage, sourceFileLocator);
         // Signal end of structure information to allow report to write all
         // information out
@@ -135,74 +119,93 @@ public class ReportGenerator {
     }
 
     private void loadExecutionData() throws Exception {
-        List<String> filePaths = new ArrayList<>(execPaths);
-        if (filePaths == null || filePaths.isEmpty()) {
+        Map<String, InputInfo> inputMap = new HashMap<>(this.inputMap);
+        if (inputMap == null || inputMap.isEmpty()) {
             throw new IllegalArgumentException("日志文件不存在 ");
         }
-        for (String filePath : filePaths) {
-            File file = new File(filePath);
-            String build = ExecFileUtil.extractBuildNum(file.getName());
-            if (!ExecFileUtil.isExecFile(file) || build == null || build.isEmpty()) {
-                continue;
-            }
-            System.out.println("ExecFileLoader load:" + filePath);
-            if (build.equals(targetBuild)) {
-                targetExecLoader.load(file);
-            } else {
-                ExecFileLoader loader = otherExecLoaderMap.get(build);
-                if (loader == null) {
-                    loader = new ExecFileLoader();
-                    otherExecLoaderMap.put(build, loader);
+        for (InputInfo input : inputMap.values()) {
+            String build = input.getBuild();
+            List<String> execPaths = input.getExecFilePaths();
+            for (String filePath : execPaths) {
+                File file = new File(filePath);
+                if (!ExecFileUtil.isExecFile(file) || build == null || build.isEmpty()) {
+                    continue;
                 }
-                loader.load(file);
+                System.out.println("ExecFileLoader load:" + filePath);
+                if (build.equals(targetInput.getBuild())) {
+                    targetExecLoader.load(file);
+                } else {
+                    ExecFileLoader loader = otherExecLoaderMap.get(build);
+                    if (loader == null) {
+                        loader = new ExecFileLoader();
+                        otherExecLoaderMap.put(build, loader);
+                    }
+                    loader.load(file);
 
+                }
             }
         }
     }
 
     private void mergeExecutionData() throws Exception {
-        Set<String> targetClassNames = ReportMethodManager.getInstance().getTargetClassNames();
-        Map<MethodKey, MethodInfo> targetMethodMap = ReportMethodManager.getInstance().getTargetMethodMap();
-        boolean filterClass = ReportMethodManager.getInstance().isIncremental();
-        Map<String, ExecutionData> targetExecDataMap = extractExecutionDataFromLoader(targetExecLoader);
-        String targetBundleName = "analyzeCoverage" + targetBuild;
-        Map<MethodKey, MethodProbePosition> targetMethodProbePos = analyzeMethodProbePositions(targetExecLoader, targetClassesDir, targetBundleName);
 
+        Map<String, ExecutionData> targetExecDataMap = extractExecutionDataFromLoader(targetExecLoader);
+        Map<MethodKey, MethodProbePosition> targetProbePos = analyzeMethodProbePositions(targetExecLoader, targetInput.getClassDir(), targetInput.getBuild());
+
+        long time = System.currentTimeMillis();
         for (Map.Entry<String, ExecFileLoader> e : otherExecLoaderMap.entrySet()) {
             String build = e.getKey();
+            InputInfo input = inputMap.get(build);
             ExecFileLoader loader = e.getValue();
-            String classesDir = infoProvider.classDir(build);
-            String bundleName = "analyzeCoverage" + build;
+            String classesDir = input.getClassDir();
 
-            Map<MethodKey, MethodInfo> methodMap = ClassesTool.loadMethodMapWithFilter(classesDir, filterClass, targetClassNames);
-            Map<MethodKey, MethodProbePosition> methodProbePos = analyzeMethodProbePositions(loader, classesDir, bundleName);
-            Set<MethodKey> sameKeys = sameKeysByCheckContent(methodMap, targetMethodMap);
+            System.out.println("---------mergeExecutionData <start> classesDir:" + classesDir );
 
-            for (Map.Entry<MethodKey, MethodProbePosition> mEntry : methodProbePos.entrySet()) {
+            Map<MethodKey, MethodProbePosition> probePos = analyzeMethodProbePositions(loader, classesDir, build);
+            Set<MethodKey> unChangedKeys = unChangedKeyCompareToTarget(classesDir);
+            System.out.println(" [methodProbePos.size:" + probePos.size() + "]");
+//            for (ExecutionData data : targetExecLoader.getExecutionDataStore().getContents()) {
+//                data.reset();
+//            }
+            for (Map.Entry<MethodKey, MethodProbePosition> mEntry : probePos.entrySet()) {
                 MethodKey key = mEntry.getKey();
-                if (sameKeys.contains(key)) {
-                    MethodProbePosition position = mEntry.getValue();
-                    MethodProbePosition targetPosition = targetMethodProbePos.get(key);
-                    ExecutionData data = targetExecDataMap.get(key.getClassName());
-                    ExecutionData newData = genNewExecData(key, position, targetPosition, data);
-                    if (newData != null) {
-                        targetExecLoader.getExecutionDataStore().put(newData);
-                    }
+                if (!unChangedKeys.contains(key)) {
+                    continue;
+                }
+                MethodProbePosition position = mEntry.getValue();
+                MethodProbePosition targetPosition = targetProbePos.get(key);
+                ExecutionData data = targetExecDataMap.get(key.getClassName());
+                ExecutionData newData = genNewExecData(key, position, targetPosition, data);
+                if (newData != null) {
+                    targetExecLoader.getExecutionDataStore().put(newData);
                 }
             }
+
+            String cost = "" + ((System.currentTimeMillis() - time) / 1000.0) + "s";
+            System.out.println("---------mergeExecutionData <end> classesDir:" + classesDir + ", cost:" + cost + "]---------");
+            time = System.currentTimeMillis();
+
         }
     }
 
-    private static Set<MethodKey> sameKeysByCheckContent(Map<MethodKey, MethodInfo> map1, Map<MethodKey, MethodInfo> map2) {
+    private Set<MethodKey> unChangedKeyCompareToTarget(String classesDir) {
+
+        ReportMethodManager manager = ReportMethodManager.getInstance();
+        boolean filterClass = manager.isIncremental();
+        Set<String> targetClassNames = manager.getTargetClassNames();
+        Map<MethodKey, MethodInfo> map1 = ClassesTool.loadMethodMapWithFilter(classesDir, filterClass, targetClassNames);
+        Map<MethodKey, MethodInfo> map2 = ReportMethodManager.getInstance().getTargetMethodMap();
+
         Set<MethodKey> keys = new HashSet<>();
-        for (Map.Entry<MethodKey, MethodInfo> e : map1.entrySet()) {
+        for (Map.Entry<MethodKey, MethodInfo> e : map2.entrySet()) {
             MethodKey key = e.getKey();
-            MethodInfo other = map2.get(e.getKey());
+            MethodInfo other = map1.get(e.getKey());
             MethodInfo method = e.getValue();
             if (other != null && method != null && method.md5 != null && method.md5.equals(other.md5)) {
                 keys.add(key);
             }
         }
+        System.out.println(" [all method in unchanged class:" + map1.size() + " ,targetMethod.size:" + map2.size()+", unchanged method:"+keys.size());
         return keys;
     }
 
@@ -216,19 +219,16 @@ public class ReportGenerator {
             if (fromProbes == null || toProbes == null) {
                 return null;
             }
-            int length = toProbes.length;
-            boolean[] probes = Arrays.copyOf(toProbes, length);
+            boolean[] probes = new boolean[toProbes.length];
             int toEnd = toPos.getEnd();
             for (int i = toPos.getStart(), j = fromPos.getStart(); i <= toEnd; i++, j++) {
-                probes[i] = probes[i] || fromProbes[j];
+                probes[i] =  fromProbes[j];
             }
             return new ExecutionData(data.getId(), data.getName(), probes);
         } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
-
-
     }
 
     private static Map<String, ExecutionData> extractExecutionDataFromLoader(ExecFileLoader loader) {
@@ -240,8 +240,8 @@ public class ReportGenerator {
         return res;
     }
 
-    private static Map<MethodKey, MethodProbePosition> analyzeMethodProbePositions(ExecFileLoader loader, String classesDir, String bundleName) throws Exception {
-
+    private static Map<MethodKey, MethodProbePosition> analyzeMethodProbePositions(ExecFileLoader loader, String classesDir, String build) throws Exception {
+        String bundleName = "analyzeCoverage" + build;
         IBundleCoverage bundleCoverage = analyzeStructure(loader, classesDir, bundleName);
         Map<MethodKey, MethodProbePosition> res = new HashMap<>();
         for (IPackageCoverage aPackage : bundleCoverage.getPackages()) {
@@ -264,7 +264,7 @@ public class ReportGenerator {
         final Analyzer analyzer = new Analyzer(loader.getExecutionDataStore(), coverageBuilder);
         int count = analyzer.analyzeAll(new File(classesDir));
         String cost = "" + ((System.currentTimeMillis() - time) / 1000.0) + "s";
-        System.out.println("---------classesDir:" + classesDir + " [count:" + count + ", cost:" + cost + "]---------");
+        System.out.println("    ---------analyzeStructure classesDir:" + classesDir + " [classFile count:" + count + ", cost:" + cost + "]---------");
         return coverageBuilder.getBundle(bundleName);
     }
 
@@ -303,20 +303,21 @@ public class ReportGenerator {
     private static final String BUILD_PREFIX = "b";
 
     public static void generate(ReportGeneratorParams p) throws Exception {
-        GeneratorInfoProvider infoProvider = createGeneratorInfoProvider(p.getBackupDir());
-        analysisAndSaveTwoBuildDiff(p, infoProvider);
-        List<String> realEcFilePaths = ExecFileUtil.extractExecFilePaths(p.getEcFiles());
+
+        analysisAndSaveTwoBuildDiff(p);
+        Map<String, InputInfo> inputMap = prepareInputInfo(p);
         String reportDir = p.getReportOutDir();
-        ReportGenerator generator = new ReportGenerator(p.getBuildNum(), realEcFilePaths, reportDir, infoProvider);
+        ReportGenerator generator = new ReportGenerator(p.getBuildNum(), inputMap, reportDir);
         generator.create();
-        ExecFileUtil.saveGenerateInfo(realEcFilePaths, reportDir);
+        ExecFileUtil.saveGenerateInfo(inputMap, reportDir);
     }
 
-    private static void analysisAndSaveTwoBuildDiff(ReportGeneratorParams p, GeneratorInfoProvider infoProvider) {
+    private static void analysisAndSaveTwoBuildDiff(ReportGeneratorParams p) {
         String relativeBuildNum = p.getRelativeBuildNum();
+        String backupDir = p.getBackupDir();
         if (relativeBuildNum != null && relativeBuildNum.length() > 0) {
-            String newDirPath = infoProvider.classDir(p.getBuildNum());
-            String oldDirPath = infoProvider.classDir(relativeBuildNum);
+            String newDirPath = classDirOfBuild(backupDir, p.getBuildNum());
+            String oldDirPath = classDirOfBuild(backupDir, relativeBuildNum);
             System.out.println("analysisAndSaveTwoBuildDiff,----------  \n * newDir:" + newDirPath + " \n * oldDir:" + oldDirPath);
             Set<MethodInfo> methods = ClassesTool.diffMethodsOfTwoDir(newDirPath, oldDirPath);
             ReportMethodManager.getInstance().setTarget(methods);
@@ -326,23 +327,30 @@ public class ReportGenerator {
         }
     }
 
-    private static GeneratorInfoProvider createGeneratorInfoProvider(String buildBackDir) {
-        return new GeneratorInfoProvider() {
-            @Override
-            public String backBuildDir(String buildNum) {
-                return buildBackDir + "/" + BUILD_PREFIX + buildNum;
-            }
+    private static Map<String, InputInfo> prepareInputInfo(ReportGeneratorParams p) {
+        String targetBuild = p.getBuildNum();
+        Map<String, List<String>> realEcFilePaths = ExecFileUtil.extractExecFilePathMap(p.getEcFiles());
+        if(!realEcFilePaths.containsKey(targetBuild)){
+            realEcFilePaths.put(targetBuild,new ArrayList<>());
+        }
+        String backupDir = p.getBackupDir();
+        Map<String, InputInfo> inputMap = new HashMap<>();
+        for (String build : realEcFilePaths.keySet()) {
+            String srcDir = srcDirOfBuild(backupDir, build);
+            String classDir = classDirOfBuild(backupDir, build);
+            List<String> ecPaths = realEcFilePaths.get(build);
+            inputMap.put(build, new InputInfo(build, srcDir, classDir, ecPaths));
+        }
+        return inputMap;
+    }
 
-            @Override
-            public String classDir(String buildNum) {
-                return buildBackDir + "/" + BUILD_PREFIX + buildNum + "/build";
-            }
+    public static String classDirOfBuild(String buildBackDir, String buildNum) {
+        return buildBackDir + "/" + BUILD_PREFIX + buildNum + "/build";
+    }
 
-            @Override
-            public String srcDir(String buildNum) {
-                return buildBackDir + "/" + BUILD_PREFIX + buildNum + "/src/main/java";
-            }
-        };
+
+    public static String srcDirOfBuild(String buildBackDir, String buildNum) {
+        return buildBackDir + "/" + BUILD_PREFIX + buildNum + "/src/main/java";
     }
 
     private static String formatDateTime(long time) {
@@ -350,13 +358,6 @@ public class ReportGenerator {
         return format.format(time);
     }
 
-    interface GeneratorInfoProvider {
-        String backBuildDir(String buildNum);
-
-        String classDir(String buildNum);
-
-        String srcDir(String buildNum);
-    }
 }
 
 

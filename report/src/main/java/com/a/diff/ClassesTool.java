@@ -23,8 +23,8 @@ public class ClassesTool {
         int compareCount = 0;
         Set<MethodInfo> res = new HashSet<>();
 
-        Set<String> newClassPaths = getAllClassPaths(newDirPath);
-        Set<String> oldClassPaths = getAllClassPaths(oldDirPath);
+        Set<String> newClassPaths = getAllClassRelativePaths(newDirPath);
+        Set<String> oldClassPaths = getAllClassRelativePaths(oldDirPath);
 
         for (String relaPath : newClassPaths) {
             File newFile = new File(newDirPath, relaPath);
@@ -46,7 +46,7 @@ public class ClassesTool {
 
         }
         double cost = (System.currentTimeMillis() - time) / 1000.0;
-        System.out.println(" diff methods of twoDir, methods.size:" + res.size() + " compareCount:" + compareCount + " cost:" + cost + "s");
+        System.out.println(" diff methods of twoDir, methods.size:" + res.size() + " compareClassCount:" + compareCount + " cost:" + cost + "s");
         return res;
     }
 
@@ -62,12 +62,12 @@ public class ClassesTool {
 
     public static Set<MethodInfo> loadMethodsWithFilter(String dirPath, boolean filter, Set<String> filterClassNames) {
         long time = System.currentTimeMillis();
-        int compareCount = 0;
-        Set<String> classPaths = getAllClassPaths(dirPath);
+        int classCount = 0;
+        Set<String> classPaths = getAllClassRelativePaths(dirPath);
         Set<MethodInfo> methods = new HashSet<>();
         for (String classPath : classPaths) {
             try {
-                File classFile = new File(classPath);
+                File classFile = new File(dirPath, classPath);
                 byte[] newFileContent = readFileToByteArray(classFile);
                 ClassReader cr = new ClassReader(newFileContent);
                 String className = cr.getClassName();
@@ -76,13 +76,14 @@ public class ClassesTool {
                     cr.accept(cv, 0);
                     Set<MethodInfo> set = cv.getMethodSet();
                     methods.addAll(set);
+                    classCount++;
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
         String cost = "" + ((System.currentTimeMillis() - time) / 1000.0) + "s";
-        System.out.println("loadMethodsWithFilter, classPaths.size:" + classPaths.size() + " compareCount:" + compareCount + " cost:" + cost);
+        System.out.println("loadMethodsWithFilter, classPaths.size:" + classPaths.size() + " classCount:" + classCount + " methodCount:" + methods.size() + " cost:" + cost);
 
         return methods;
     }
@@ -100,7 +101,7 @@ public class ClassesTool {
     }
 
 
-    private static Set<String> getAllClassPaths(String rootDirPath) {
+    private static Set<String> getAllClassRelativePaths(String rootDirPath) {
         Set<String> paths = new HashSet<>();
         File rootDir = new File(rootDirPath);
         addClassFilesToList(rootDir.toPath(), rootDir, paths);
