@@ -12,25 +12,20 @@ import java.io.File
 abstract class CocoBackupTask : DefaultTask() {
 
 
-    // ./gradlew dailyDebugCocoBackup  --toDir=~/backup/fxj --buildNum=100
+    // ./gradlew dailyDebugCocoBackup  --toDir=~/Android/backup/FXJ/100
     @Option(option = "toDir", description = "build backup dir")
     @Internal
     var toDir: String = "";
-
-    @Option(option = "buildNum", description = "jenkins build num")
-    @Internal
-    var buildNum: String = "";
-
 
     @TaskAction
     fun taskAction() {
         try {
             println("**** start CocoBackupTask ****")
             val variantName: String = name.removeSuffix(CocoBackUpConst.TaskSuffix)
-            println("toDir:${toDir} ,buildNum:${buildNum} variantName:${variantName}")
+            println("toDir:${toDir} , variantName:${variantName}")
 
             val tempDir = File(project.buildDir, "cocoBackupTemp")
-            val backupDir = File(toDir, "b${buildNum}")
+            val backupDir = File(toDir)
             println("-------> clear and copy to ${backupDir.absolutePath} , from ${tempDir.absolutePath}    ")
 
             ensureCleanDir(tempDir)

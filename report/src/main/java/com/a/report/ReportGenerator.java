@@ -159,7 +159,7 @@ public class ReportGenerator {
             ExecFileLoader loader = e.getValue();
             String classesDir = input.getClassDir();
 
-            System.out.println("---------mergeExecutionData <start> classesDir:" + classesDir );
+            System.out.println("---------mergeExecutionData <start> classesDir:" + classesDir);
 
             Map<MethodKey, MethodProbePosition> probePos = analyzeMethodProbePositions(loader, classesDir, build);
             Set<MethodKey> unChangedKeys = unChangedKeyCompareToTarget(classesDir);
@@ -205,7 +205,7 @@ public class ReportGenerator {
                 keys.add(key);
             }
         }
-        System.out.println(" [all method in unchanged class:" + map1.size() + " ,targetMethod.size:" + map2.size()+", unchanged method:"+keys.size());
+        System.out.println(" [all method in unchanged class:" + map1.size() + " ,targetMethod.size:" + map2.size() + ", unchanged method:" + keys.size());
         return keys;
     }
 
@@ -222,7 +222,7 @@ public class ReportGenerator {
             boolean[] probes = new boolean[toProbes.length];
             int toEnd = toPos.getEnd();
             for (int i = toPos.getStart(), j = fromPos.getStart(); i <= toEnd; i++, j++) {
-                probes[i] =  fromProbes[j];
+                probes[i] = fromProbes[j];
             }
             return new ExecutionData(data.getId(), data.getName(), probes);
         } catch (Exception e) {
@@ -300,7 +300,7 @@ public class ReportGenerator {
         generate(p);
     }
 
-    private static final String BUILD_PREFIX = "b";
+//    private static final String BUILD_PREFIX = "b";
 
     public static void generate(ReportGeneratorParams p) throws Exception {
 
@@ -309,7 +309,7 @@ public class ReportGenerator {
         String reportDir = p.getReportOutDir();
         ReportGenerator generator = new ReportGenerator(p.getBuildNum(), inputMap, reportDir);
         generator.create();
-        ExecFileUtil.saveGenerateInfo(inputMap, reportDir);
+        ExecFileUtil.saveGenerateInfo(p.getEcFiles(), reportDir);
     }
 
     private static void analysisAndSaveTwoBuildDiff(ReportGeneratorParams p) {
@@ -330,8 +330,8 @@ public class ReportGenerator {
     private static Map<String, InputInfo> prepareInputInfo(ReportGeneratorParams p) {
         String targetBuild = p.getBuildNum();
         Map<String, List<String>> realEcFilePaths = ExecFileUtil.extractExecFilePathMap(p.getEcFiles());
-        if(!realEcFilePaths.containsKey(targetBuild)){
-            realEcFilePaths.put(targetBuild,new ArrayList<>());
+        if (!realEcFilePaths.containsKey(targetBuild)) {
+            realEcFilePaths.put(targetBuild, new ArrayList<>());
         }
         String backupDir = p.getBackupDir();
         Map<String, InputInfo> inputMap = new HashMap<>();
@@ -345,12 +345,12 @@ public class ReportGenerator {
     }
 
     public static String classDirOfBuild(String buildBackDir, String buildNum) {
-        return buildBackDir + "/" + BUILD_PREFIX + buildNum + "/build";
+        return buildBackDir + "/" + buildNum + "/build";
     }
 
 
     public static String srcDirOfBuild(String buildBackDir, String buildNum) {
-        return buildBackDir + "/" + BUILD_PREFIX + buildNum + "/src/main/java";
+        return buildBackDir + "/" + buildNum + "/src/main/java";
     }
 
     private static String formatDateTime(long time) {

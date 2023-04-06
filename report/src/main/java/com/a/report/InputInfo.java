@@ -38,4 +38,14 @@ public class InputInfo {
     public List<String> getExecFilePaths() {
         return execFilePaths;
     }
+
+    @Override
+    public String toString() {
+        return "InputInfo{" +
+                "build='" + build + '\'' +
+                ", srcDir='" + srcDir + '\'' +
+                ", classDir='" + classDir + '\'' +
+                ", execFilePaths=" + execFilePaths +
+                '}';
+    }
 }

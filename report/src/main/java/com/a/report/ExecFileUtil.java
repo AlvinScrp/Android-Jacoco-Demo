@@ -52,8 +52,8 @@ public class ExecFileUtil {
     public static String extractBuildNum(String execFilePath) {
         try {
             File file = new File(execFilePath);
-            //fxj_200_Redmi22041211AC_230316-1412078.ec
-            String[] ss = file.getName().split("_");
+            //FXJ-200-Redmi22041211AC-2303161412078.ec
+            String[] ss = file.getName().split("-");
             return ss[1];
         } catch (Exception e) {
             e.printStackTrace();
@@ -77,12 +77,10 @@ public class ExecFileUtil {
         }
     }
 
-    public static void saveGenerateInfo(Map<String, InputInfo> map, String reportDir) {
+    public static void saveGenerateInfo(String ecFileText, String reportDir) {
         OutputStream out = null;
         try {
-            if (map == null || map.isEmpty()) {
-                return;
-            }
+            String text=ecFileText.replace(",","\n");
             File dir = new File(reportDir);
             if (!dir.exists() || !dir.isDirectory()) {
                 return;
@@ -91,16 +89,6 @@ public class ExecFileUtil {
             if (!file.exists()) {
                 file.createNewFile();
             }
-            StringBuilder sb = new StringBuilder();
-            for (InputInfo input : map.values()) {
-                List<String> paths = input.getExecFilePaths();
-                for (String path : paths) {
-                    sb.append( path+"\n");
-                }
-            }
-
-
-            String text = sb.substring(1);
             out = new FileOutputStream(file);
             out.write(text.getBytes(StandardCharsets.UTF_8));
 

@@ -28,4 +28,16 @@ rt：
 0.0.2 
     backup和report 去掉git操作
     支持不同build的运行日志，合并生成报告
+0.0.3 
+    修改日志文件、备份文件、报告文件名格式及存放路径
+    日志文件：
+        fxj_Android_200/fxj_200_Redmi22041211AC_230316-1412078.ec
+    --> Android/FXJ/200/FXJ-200-Redmi22041211AC-2303131412082.ec
+    备份文件：
+        /backup/b100
+    --> /Android/backup/FXJ/100
+    报告文件
+        /report/fxj/fxj_200_8_20230322161838
+        /Android/report/FXJ/200-8-20230322161838
+    
 
