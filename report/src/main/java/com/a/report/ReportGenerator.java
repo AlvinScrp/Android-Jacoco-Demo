@@ -315,7 +315,7 @@ public class ReportGenerator {
     private static void analysisAndSaveTwoBuildDiff(ReportGeneratorParams p) {
         String relativeBuildNum = p.getRelativeBuildNum();
         String backupDir = p.getBackupDir();
-        if (relativeBuildNum != null && relativeBuildNum.length() > 0) {
+        if (relativeBuildNum != null && relativeBuildNum.length() > 0 && relativeBuildNum != "0") {
             String newDirPath = classDirOfBuild(backupDir, p.getBuildNum());
             String oldDirPath = classDirOfBuild(backupDir, relativeBuildNum);
             System.out.println("analysisAndSaveTwoBuildDiff,----------  \n * newDir:" + newDirPath + " \n * oldDir:" + oldDirPath);
