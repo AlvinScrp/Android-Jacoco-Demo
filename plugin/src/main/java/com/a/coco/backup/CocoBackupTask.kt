@@ -12,7 +12,7 @@ import java.io.File
 abstract class CocoBackupTask : DefaultTask() {
 
 
-    // ./gradlew dailyDebugCocoBackup  --toDir=~/Android/backup/FXJ/100
+    // ./gradlew dailyDebugCocoBackup  --toDir=/User/xx/Android/backup/FXJ/100
     @Option(option = "toDir", description = "build backup dir")
     @Internal
     var toDir: String = "";
@@ -59,13 +59,25 @@ abstract class CocoBackupTask : DefaultTask() {
 
     private fun copyModuleProjectToDir(p: Project, variantName: String, destDir: File) {
         try {
+            var second = if (variantName.endsWith("Release")) "release" else "debug"
             val rootDir = p.rootDir
             val sourceDir = File("${p.projectDir}/src/main/java")
             val javaClassDir = File("${p.projectDir}/build/intermediates/javac/${variantName}")
+            val javaClassDir2 = File("${p.projectDir}/build/intermediates/javac/${second}")
             val kotlinClassDir = File("${p.projectDir}/build/tmp/kotlin-classes/${variantName}")
-            listOf(sourceDir, javaClassDir, kotlinClassDir).forEach {
+            val kotlinClassDir2 = File("${p.projectDir}/build/tmp/kotlin-classes/${second}")
+            listOf(
+                sourceDir,
+                javaClassDir,
+                javaClassDir2,
+                kotlinClassDir,
+                kotlinClassDir2
+            ).forEach {
                 if (it.exists() && it.isDirectory) {
-                    val subPath = File(rootDir, p.name).toPath().relativize(it.toPath()).toString()
+                    var subPath = File(rootDir, p.name).toPath().relativize(it.toPath()).toString()
+                    if (subPath.endsWith("/${second}")) {
+                        subPath = subPath.replace("/${second}", "/${variantName}")
+                    }
                     val subDir = File(destDir, subPath)
 //                    ensureCleanDir(subDir)
                     FileUtils.copyDirectory(it, subDir)
