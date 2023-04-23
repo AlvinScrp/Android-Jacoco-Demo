@@ -76,7 +76,9 @@ abstract class CocoBackupTask : DefaultTask() {
                 if (it.exists() && it.isDirectory) {
                     var subPath = File(rootDir, p.name).toPath().relativize(it.toPath()).toString()
                     if (subPath.endsWith("/${second}")) {
-                        subPath = subPath.replace("/${second}", "/${variantName}")
+                        subPath = subPath.removeSuffix("/${second}")
+                    } else if (subPath.endsWith("/${variantName}")) {
+                        subPath = subPath.removeSuffix("/${variantName}")
                     }
                     val subDir = File(destDir, subPath)
 //                    ensureCleanDir(subDir)

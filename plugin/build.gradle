@@ -37,7 +37,7 @@ dependencies {
 }
 
 group 'com.a.coco'
-version '0.0.3-alpha03'
+version '0.0.3-alpha04'
 
 gradlePlugin {
     plugins {
