@@ -12,6 +12,8 @@
  *******************************************************************************/
 package org.jacoco.core.internal.analysis;
 
+import com.a.report.ReportMethodManager;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -114,6 +116,10 @@ public class ClassAnalyzer extends ClassProbesVisitor
 	private void addMethodCoverage(final String name, final String desc,
 			final String signature, final InstructionsBuilder icc,
 			final MethodNode methodNode) {
+		boolean isMethodMatched = ReportMethodManager.getInstance().isMethodMatched(getClassName(),name,desc);
+		if(!isMethodMatched){
+			return;
+		}
 		final MethodCoverageCalculator mcc = new MethodCoverageCalculator(
 				icc.getInstructions());
 		filter.filter(methodNode, this, mcc);

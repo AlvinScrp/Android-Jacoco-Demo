@@ -66,7 +66,7 @@ public class ClassProbesAdapter extends ClassVisitor
         final MethodProbesVisitor mv = cv.visitMethod(access, name, desc,
                 signature, exceptions);
 
-        Boolean isMatched = ReportMethodManager.getInstance().isMatched(this.name, name, desc);
+        Boolean isMatched = ReportMethodManager.getInstance().isClassMatched(this.name);
         methodProbes = mv != null && isMatched ? mv : EMPTY_METHOD_PROBES_VISITOR;
 
         return new MethodSanitizer(null, access, name, desc, signature,

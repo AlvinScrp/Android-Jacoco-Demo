@@ -103,8 +103,8 @@ public class CoverageBuilder implements ICoverageVisitor {
 		final IClassCoverage dup = classes.put(name, coverage);
 		if (dup != null) {
 			if (dup.getId() != coverage.getId()) {
-				throw new IllegalStateException(
-						"Can't add different class with same name: " + name);
+//				throw new IllegalStateException(
+//						"Can't add different class with same name: " + name);
 			}
 		} else {
 			final String source = coverage.getSourceFileName();

@@ -58,8 +58,15 @@ public class ReportMethodManager {
         return incremental;
     }
 
-    public boolean isMatched(String className, String methodName, String desc) {
+    public boolean isClassMatched(String className){
+        if (!incremental) {
+            boolean ignore = isIgnoreClass(className);
+            return !ignore;
+        }
+        return  targetClassNames.contains(className) && !isIgnoreClass(className);
+    }
 
+    public boolean isMethodMatched(String className, String methodName, String desc) {
         if (!incremental) {
             boolean ignore = isIgnoreClass(className);
             return !ignore;

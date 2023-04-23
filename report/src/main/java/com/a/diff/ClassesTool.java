@@ -23,17 +23,21 @@ public class ClassesTool {
         int compareCount = 0;
         Set<MethodInfo> res = new HashSet<>();
 
-        Set<String> newClassPaths = getAllClassRelativePaths(newDirPath);
-        Set<String> oldClassPaths = getAllClassRelativePaths(oldDirPath);
+        Map<String, String> newClassPaths = getAllClassPaths(newDirPath);
+        Map<String, String> oldClassPaths = getAllClassPaths(oldDirPath);
 
-        for (String relaPath : newClassPaths) {
-            File newFile = new File(newDirPath, relaPath);
-            if (!oldClassPaths.contains(relaPath)) {
+        for (Map.Entry<String, String> e : newClassPaths.entrySet()) {
+            String className = e.getKey();
+            String newClassPath = e.getValue();
+
+            File newFile = new File(newClassPath);
+            if (!oldClassPaths.containsKey(className)) {
                 //file add
                 Set<MethodInfo> newMethods = getFileMethodInfo(newFile);
                 res.addAll(newMethods);
             } else {
-                File oldFile = new File(oldDirPath, relaPath);
+                String oldClassPath = oldClassPaths.get(className);
+                File oldFile = new File(oldClassPath);
                 compareCount++;
                 if (!compareFileContent(newFile, oldFile)) {
                     //file modify
@@ -63,16 +67,16 @@ public class ClassesTool {
     public static Set<MethodInfo> loadMethodsWithFilter(String dirPath, boolean filter, Set<String> filterClassNames) {
         long time = System.currentTimeMillis();
         int classCount = 0;
-        Set<String> classPaths = getAllClassRelativePaths(dirPath);
+        Map<String, String> classPaths = getAllClassPaths(dirPath);
         Set<MethodInfo> methods = new HashSet<>();
-        for (String classPath : classPaths) {
+        for (String className : classPaths.keySet()) {
             try {
-                File classFile = new File(dirPath, classPath);
-                byte[] newFileContent = readFileToByteArray(classFile);
-                ClassReader cr = new ClassReader(newFileContent);
-                String className = cr.getClassName();
                 if (filter && filterClassNames.contains(className)) {
+                    String classPath = classPaths.get(className);
+                    File classFile = new File( classPath);
+                    byte[] newFileContent = readFileToByteArray(classFile);
                     MethodExtractClassVisitor cv = new MethodExtractClassVisitor();
+                    ClassReader cr = new ClassReader(newFileContent);
                     cr.accept(cv, 0);
                     Set<MethodInfo> set = cv.getMethodSet();
                     methods.addAll(set);
@@ -101,24 +105,32 @@ public class ClassesTool {
     }
 
 
-    private static Set<String> getAllClassRelativePaths(String rootDirPath) {
-        Set<String> paths = new HashSet<>();
+    private static Map<String, String> getAllClassPaths(String rootDirPath) {
+        Map<String, String> paths = new HashMap<>();
         File rootDir = new File(rootDirPath);
         addClassFilesToList(rootDir.toPath(), rootDir, paths);
         return paths;
     }
 
-    private static void addClassFilesToList(Path rootPath, File dir, Set<String> paths) {
+    private static void addClassFilesToList(Path rootPath, File dir, Map<String, String> paths) {
         File[] files = dir.listFiles();
         if (files != null) {
             for (File file : files) {
                 if (file.isDirectory()) {
                     addClassFilesToList(rootPath, file, paths);
                 } else if (file.getName().endsWith(".class")) {
-                    paths.add(rootPath.relativize(file.toPath()).toString());
+                    String className = getClassName(file);
+                    paths.put(className, file.getAbsolutePath());
                 }
             }
         }
+    }
+
+    public static String getClassName(File classFile) {
+        byte[] newFileContent = readFileToByteArray(classFile);
+        ClassReader cr = new ClassReader(newFileContent);
+        return cr.getClassName();
+
     }
 
     public static Set<MethodInfo> getFileMethodInfo(File classFile) {

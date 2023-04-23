@@ -11,8 +11,8 @@ public class ReportGeneratorParams {
     public final static String key_backupDir = "--backupDir";
     public final static String key_buildNum = "--buildNum";
     public final static String key_relativeBuildNum = "--relativebuildNum";
-    public final static String key_gitUsername = "--gitUsername";
-    public final static String key_gitPwd = "--gitPwd";
+//    public final static String key_gitUsername = "--gitUsername";
+//    public final static String key_gitPwd = "--gitPwd";
 
     private Map<String, String> paramsMap = new HashMap<>();
 
@@ -53,13 +53,13 @@ public class ReportGeneratorParams {
         return paramsMap.get(key_relativeBuildNum);
     }
 
-    public String getGitUsername() {
-        return paramsMap.get( key_gitUsername);
-    }
-
-    public String getGitPwd() {
-        return paramsMap.get( key_gitPwd);
-    }
+//    public String getGitUsername() {
+//        return paramsMap.get( key_gitUsername);
+//    }
+//
+//    public String getGitPwd() {
+//        return paramsMap.get( key_gitPwd);
+//    }
 
 
 }

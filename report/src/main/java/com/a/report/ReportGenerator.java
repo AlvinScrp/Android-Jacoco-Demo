@@ -21,6 +21,7 @@ import org.jacoco.core.analysis.IBundleCoverage;
 import org.jacoco.core.analysis.IClassCoverage;
 import org.jacoco.core.analysis.IPackageCoverage;
 import org.jacoco.core.data.ExecutionData;
+import org.jacoco.core.data.ExecutionDataStore;
 import org.jacoco.core.internal.analysis.ClassCoverageImpl;
 import org.jacoco.core.internal.analysis.MethodKey;
 import org.jacoco.core.internal.analysis.MethodProbePosition;
@@ -35,7 +36,6 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -60,6 +60,7 @@ public class ReportGenerator {
     private final String reportDir;
     private InputInfo targetInput;
     private ExecFileLoader targetExecLoader = new ExecFileLoader();
+    private ExecPreLoader preLoader = new ExecPreLoader();
     private Map<String, ExecFileLoader> otherExecLoaderMap = new ConcurrentHashMap<>();
 
     /**
@@ -80,9 +81,10 @@ public class ReportGenerator {
     public void create() throws Exception {
 
         try {
+            preGenerateExecutionData();
             loadExecutionData();
             mergeExecutionData();
-            IBundleCoverage bundleCoverage = analyzeStructure(targetExecLoader, targetInput.getClassDir(), title);
+            IBundleCoverage bundleCoverage = analyzeStructure(targetExecLoader.getExecutionDataStore(), targetInput.getClassDir(), title);
             createReport(bundleCoverage);
         } catch (Exception e) {//不中断流程
             e.printStackTrace();
@@ -90,7 +92,6 @@ public class ReportGenerator {
         }
 
     }
-
 
     private void createReport(final IBundleCoverage bundleCoverage)
             throws IOException {
@@ -116,6 +117,13 @@ public class ReportGenerator {
         // information out
         visitor.visitEnd();
 
+    }
+
+    private void preGenerateExecutionData() {
+
+        //classId className probeCount
+        preLoader.analyzeAll(new File( targetInput.getClassDir()));
+//        ProbeCounter probeCounter
     }
 
     private void loadExecutionData() throws Exception {
@@ -149,8 +157,8 @@ public class ReportGenerator {
 
     private void mergeExecutionData() throws Exception {
 
-        Map<String, ExecutionData> targetExecDataMap = extractExecutionDataFromLoader(targetExecLoader);
-        Map<MethodKey, MethodProbePosition> targetProbePos = analyzeMethodProbePositions(targetExecLoader, targetInput.getClassDir(), targetInput.getBuild());
+        Map<String, ExecutionData> preExecutionDatas = mappingExecutionData(preLoader.getExecutionDataStore());
+        Map<MethodKey, MethodProbePosition> preProbePos = analyzeMethodProbePositions(preLoader.getExecutionDataStore(), targetInput.getClassDir(), targetInput.getBuild());
 
         long time = System.currentTimeMillis();
         for (Map.Entry<String, ExecFileLoader> e : otherExecLoaderMap.entrySet()) {
@@ -161,21 +169,18 @@ public class ReportGenerator {
 
             System.out.println("---------mergeExecutionData <start> classesDir:" + classesDir);
 
-            Map<MethodKey, MethodProbePosition> probePos = analyzeMethodProbePositions(loader, classesDir, build);
+            Map<MethodKey, MethodProbePosition> probePos = analyzeMethodProbePositions(loader.getExecutionDataStore(), classesDir, build);
             Set<MethodKey> unChangedKeys = unChangedKeyCompareToTarget(classesDir);
             System.out.println(" [methodProbePos.size:" + probePos.size() + "]");
-//            for (ExecutionData data : targetExecLoader.getExecutionDataStore().getContents()) {
-//                data.reset();
-//            }
             for (Map.Entry<MethodKey, MethodProbePosition> mEntry : probePos.entrySet()) {
                 MethodKey key = mEntry.getKey();
                 if (!unChangedKeys.contains(key)) {
                     continue;
                 }
                 MethodProbePosition position = mEntry.getValue();
-                MethodProbePosition targetPosition = targetProbePos.get(key);
-                ExecutionData data = targetExecDataMap.get(key.getClassName());
-                ExecutionData newData = genNewExecData(key, position, targetPosition, data);
+                MethodProbePosition prePos = preProbePos.get(key);
+                ExecutionData preData = preExecutionDatas.get(key.getClassName());
+                ExecutionData newData = genNewExecData(key, position, prePos, preData);
                 if (newData != null) {
                     targetExecLoader.getExecutionDataStore().put(newData);
                 }
@@ -209,30 +214,30 @@ public class ReportGenerator {
         return keys;
     }
 
-    private ExecutionData genNewExecData(MethodKey key, MethodProbePosition fromPos, MethodProbePosition toPos, ExecutionData data) {
+    private ExecutionData genNewExecData(MethodKey key, MethodProbePosition pos, MethodProbePosition prePos, ExecutionData preData) {
         try {
-            if (key == null || fromPos == null || toPos == null || data == null) {
+            if (key == null || pos == null || prePos == null || preData == null) {
                 return null;
             }
-            boolean[] fromProbes = fromPos.getProbes();
-            boolean[] toProbes = toPos.getProbes();
-            if (fromProbes == null || toProbes == null) {
+            boolean[] probes = pos.getProbes();
+            boolean[] preProbes = prePos.getProbes();
+            if (probes == null || preProbes == null) {
                 return null;
             }
-            boolean[] probes = new boolean[toProbes.length];
-            int toEnd = toPos.getEnd();
-            for (int i = toPos.getStart(), j = fromPos.getStart(); i <= toEnd; i++, j++) {
-                probes[i] = fromProbes[j];
+            boolean[] newProbes = new boolean[preProbes.length];
+            int toEnd = prePos.getEnd();
+            for (int i = prePos.getStart(), j = pos.getStart(); i <= toEnd; i++, j++) {
+                newProbes[i] = probes[j];
             }
-            return new ExecutionData(data.getId(), data.getName(), probes);
+            return new ExecutionData(preData.getId(), preData.getName(), newProbes);
         } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
     }
 
-    private static Map<String, ExecutionData> extractExecutionDataFromLoader(ExecFileLoader loader) {
-        Collection<ExecutionData> contents = loader.getExecutionDataStore().getContents();
+    private static Map<String, ExecutionData> mappingExecutionData(ExecutionDataStore executionData) {
+        Collection<ExecutionData> contents = executionData.getContents();
         Map<String, ExecutionData> res = new HashMap<>();
         for (ExecutionData data : contents) {
             res.put(data.getName(), data);
@@ -240,9 +245,9 @@ public class ReportGenerator {
         return res;
     }
 
-    private static Map<MethodKey, MethodProbePosition> analyzeMethodProbePositions(ExecFileLoader loader, String classesDir, String build) throws Exception {
+    private static Map<MethodKey, MethodProbePosition> analyzeMethodProbePositions(ExecutionDataStore executionData, String classesDir, String build) throws Exception {
         String bundleName = "analyzeCoverage" + build;
-        IBundleCoverage bundleCoverage = analyzeStructure(loader, classesDir, bundleName);
+        IBundleCoverage bundleCoverage = analyzeStructure(executionData, classesDir, bundleName);
         Map<MethodKey, MethodProbePosition> res = new HashMap<>();
         for (IPackageCoverage aPackage : bundleCoverage.getPackages()) {
             Collection<IClassCoverage> classCoverages = aPackage.getClasses();
@@ -258,10 +263,10 @@ public class ReportGenerator {
     }
 
 
-    private static IBundleCoverage analyzeStructure(ExecFileLoader loader, String classesDir, String bundleName) throws IOException {
+    private static IBundleCoverage analyzeStructure(ExecutionDataStore executionData, String classesDir, String bundleName) throws IOException {
         long time = System.currentTimeMillis();
         final CoverageBuilder coverageBuilder = new CoverageBuilder();
-        final Analyzer analyzer = new Analyzer(loader.getExecutionDataStore(), coverageBuilder);
+        final Analyzer analyzer = new Analyzer(executionData, coverageBuilder);
         int count = analyzer.analyzeAll(new File(classesDir));
         String cost = "" + ((System.currentTimeMillis() - time) / 1000.0) + "s";
         System.out.println("    ---------analyzeStructure classesDir:" + classesDir + " [classFile count:" + count + ", cost:" + cost + "]---------");
@@ -287,12 +292,12 @@ public class ReportGenerator {
             help.append("参数异常,重新输入。\n");
             help.append("java -jar <jar file path>\n");
             help.append(ReportGeneratorParams.key_ecFiles + "  日志文件或目录，用于生成报告,用英文逗号,隔开\n");
-            help.append(ReportGeneratorParams.key_backupDir + "   源码和编译产物git仓库本地目录，用于生成报告\n");
+            help.append(ReportGeneratorParams.key_backupDir + "   源码和编译产物备份目录，用于生成报告\n");
             help.append(ReportGeneratorParams.key_buildNum + "    构建序号，对应到源码和编译产物\n");
-            help.append(ReportGeneratorParams.key_relativeBuildNum + "   相比较的构建序号，用于生成增量报告，空则全量\n");
+            help.append(ReportGeneratorParams.key_relativeBuildNum + "   相比较的构建序号，用于生成增量报告，0则全量\n");
             help.append(ReportGeneratorParams.key_reportOutDir + "   报告输出目录\n");
-            help.append(ReportGeneratorParams.key_gitUsername + "   如果在~/.netrc中配置了git账户密码，可以不填\n");
-            help.append(ReportGeneratorParams.key_gitPwd + "   如果在~/.netrc中配置了git账户密码，可以不填\n");
+//            help.append(ReportGeneratorParams.key_gitUsername + "   如果在~/.netrc中配置了git账户密码，可以不填\n");
+//            help.append(ReportGeneratorParams.key_gitPwd + "   如果在~/.netrc中配置了git账户密码，可以不填\n");
             help.append("参数设置方式，可以使用 --<参数名称>=<值> ");
             System.out.println(help);
             return;
@@ -312,7 +317,7 @@ public class ReportGenerator {
         ExecFileUtil.saveGenerateInfo(p.getEcFiles(), reportDir);
     }
 
-    private static void analysisAndSaveTwoBuildDiff(ReportGeneratorParams p) {
+    public static void analysisAndSaveTwoBuildDiff(ReportGeneratorParams p) {
         String relativeBuildNum = p.getRelativeBuildNum();
         String backupDir = p.getBackupDir();
         if (relativeBuildNum != null && relativeBuildNum.length() > 0 && relativeBuildNum != "0") {
