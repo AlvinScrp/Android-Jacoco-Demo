@@ -36,8 +36,8 @@ dependencies {
 
 }
 
-group 'com.a.coco'
-version '0.0.3-alpha04'
+group 'com.webuy.plugin.coco'
+version '0.0.3-alpha04-SNAPSHOT'
 
 gradlePlugin {
     plugins {
@@ -51,12 +51,28 @@ gradlePlugin {
         }
     }
 }
-//for   ./gradlew :plugin:publishPluginMavenPublicationToMavenRepository
+
+
+Properties properties = new Properties()
+properties.load(new FileInputStream(file("${rootDir}/local.properties")))
+def SNAPSHOT_REPO = properties.getProperty('SNAPSHOT_REPO', '')
+def RELEASE_REPO = properties.getProperty('RELEASE_REPO', '')
+def USER_NAME = properties.getProperty('USER_NAME', '')
+def PASSWORD = properties.getProperty('PASSWORD', '')
+
+//for   ./gradlew :plugin:publishPluginMavenPublicationToWebuyRepository
 publishing {
     repositories {
         maven {
 //            url '../repo'
-            url '/Users/canglong/Documents/android_project/fxj2/repo'
+            name = "webuy"
+            url = version.endsWith('SNAPSHOT') ? SNAPSHOT_REPO : RELEASE_REPO
+            allowInsecureProtocol true
+            credentials {
+                username = USER_NAME
+                password = PASSWORD
+            }
+//            url '/Users/canglong/Documents/android_project/fxj2/repo'
         }
     }
 }
